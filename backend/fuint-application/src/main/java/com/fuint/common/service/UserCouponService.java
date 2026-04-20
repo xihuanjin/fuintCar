@@ -8,6 +8,7 @@ import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtUserCoupon;
+
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +55,7 @@ public interface UserCouponService extends IService<MtUserCoupon> {
     /**
      * 获取用户的卡券
      * @param paramMap 查询参数
-     * @throws BusinessCheckException
+     * @return
      * */
     ResponseObject getUserCouponList(Map<String, Object> paramMap);
 
@@ -73,7 +74,7 @@ public interface UserCouponService extends IService<MtUserCoupon> {
      * @param userId
      * @param couponId
      * */
-    List<MtUserCoupon> getUserCouponDetail(Integer userId, Integer couponId) throws BusinessCheckException;
+    List<MtUserCoupon> getUserCouponDetail(Integer userId, Integer couponId);
 
     /**
      * 获取会员卡券详情

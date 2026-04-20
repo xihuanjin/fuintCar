@@ -189,6 +189,9 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         }
         // 固定有效期验证
         if (reqCouponDto.getExpireType().equals(CouponExpireTypeEnum.FIX.getKey())) {
+            if (StringUtil.isBlank(reqCouponDto.getBeginTime()) || StringUtil.isBlank(reqCouponDto.getEndTime())) {
+                throw new BusinessCheckException("生效期开始、结束时间不能为空");
+            }
             if (StringUtil.isNotBlank(reqCouponDto.getBeginTime()) && StringUtil.isNotBlank(reqCouponDto.getEndTime())) {
                 Date startTime = DateUtil.parseDate(reqCouponDto.getBeginTime());
                 Date endTime = DateUtil.parseDate(reqCouponDto.getEndTime());
@@ -431,23 +434,26 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      * 删除卡券
      *
      * @param  id 券ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @OperationServiceLog(description = "删除卡券")
     @Transactional(rollbackFor = Exception.class)
-    public void deleteCoupon(Long id, String operator) throws BusinessCheckException {
+    public void deleteCoupon(Long id, AccountInfo accountInfo) throws BusinessCheckException {
         MtCoupon couponInfo = queryCouponById(id.intValue());
         if (null == couponInfo) {
             throw new BusinessCheckException("卡券不存在");
+        }
+        if (!couponInfo.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
         couponInfo.setStatus(StatusEnum.DISABLE.getKey());
         // 修改时间
         couponInfo.setUpdateTime(new Date());
         // 操作人
-        couponInfo.setOperator(operator);
+        couponInfo.setOperator(accountInfo.getAccountName());
         // 删除会员关联的卡券
         userCouponService.removeUserCouponByCouponId(couponInfo.getId());
 
@@ -630,25 +636,30 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      * @param  num 发放套数
      * @param  sendMessage 是否发送消息
      * @param  uuid 批次号
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "发放卡券")
-    public ResponseObject sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, String operator) throws BusinessCheckException {
+    public ResponseObject sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, AccountInfo accountInfo) throws BusinessCheckException {
         ResponseObject response = new ResponseObject(200, "发放成功", null);
         if (StringUtil.isEmpty(uuid)) {
             uuid = UUID.randomUUID().toString().replaceAll("-", "");
         }
         MtCoupon couponInfo = queryCouponById(couponId);
         MtUser userInfo = memberService.queryMemberById(userId);
+        if (userInfo == null || !userInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
+            throw new BusinessCheckException("会员不存在或已停用");
+        }
 
-        if (null == userInfo || !userInfo.getStatus().equals(StatusEnum.ENABLED.getKey())) {
-            response.setMessage("该会员不存在或已禁用，请先注册会员");
-            response.setCode(201);
-            return response;
+        if (couponInfo == null) {
+            throw new BusinessCheckException("卡券不存在");
+        }
+
+        if (!accountInfo.getMerchantId().equals(userInfo.getMerchantId()) || !accountInfo.getMerchantId().equals(couponInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
 
         String mobile = StringUtil.isNotEmpty(userInfo.getMobile()) ? userInfo.getMobile() : "";
@@ -721,7 +732,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
                 userCoupon.setStoreId(userInfo.getStoreId());
                 userCoupon.setAmount(couponInfo.getAmount());
                 userCoupon.setBalance(couponInfo.getAmount());
-                userCoupon.setOperator(operator);
+                userCoupon.setOperator(accountInfo.getAccountName());
                 userCoupon.setGroupId(couponInfo.getGroupId());
                 userCoupon.setMobile(mobile);
                 userCoupon.setUserId(userInfo.getId());
@@ -759,7 +770,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         sendLogDto.setGroupName(mtCouponGroup.getName());
         sendLogDto.setCouponId(couponInfo.getId());
         sendLogDto.setSendNum(num);
-        sendLogDto.setOperator(operator);
+        sendLogDto.setOperator(accountInfo.getAccountName());
         sendLogDto.setUuid(uuid);
         sendLogDto.setMerchantId(couponInfo.getMerchantId());
         sendLogDto.setStoreId(couponInfo.getStoreId());
@@ -800,14 +811,14 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      * @param userIds  会员ID
      * @param num      发放套数
      * @param uuid     批次号
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "发放卡券")
-    public Boolean batchSendCoupon(Integer couponId, List<Integer> userIds, Integer num, String uuid, String operator) throws BusinessCheckException {
+    public Boolean batchSendCoupon(Integer couponId, List<Integer> userIds, Integer num, String uuid, AccountInfo accountInfo) throws BusinessCheckException {
        if (userIds == null || userIds.size() < 1) {
            throw new BusinessCheckException("发放对象异常，卡券发放失败");
        }
@@ -815,7 +826,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
        Boolean sendMsg = userIds.size() >= 10 ? false : true;
        if (userIds != null && userIds.size() > 0) {
            for (Integer userId : userIds) {
-                ResponseObject result = sendCoupon(couponId, userId, num, sendMsg, uuid, operator);
+                ResponseObject result = sendCoupon(couponId, userId, num, sendMsg, uuid, accountInfo);
                 if (result.getCode() != 200) {
                     throw new BusinessCheckException("发放卡券失败：" + result.getMessage());
                 }
@@ -1048,13 +1059,13 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
      * 根据券ID删除会员卡券
      *
      * @param  id 券ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @OperationServiceLog(description = "删除会员卡券")
-    public void deleteUserCoupon(Integer id, String operator) throws BusinessCheckException {
+    public void deleteUserCoupon(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
         MtUserCoupon userCoupon = mtUserCouponMapper.selectById(id);
         if (null == userCoupon) {
             return;
@@ -1064,13 +1075,18 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         if(!userCoupon.getStatus().equals(UserCouponStatusEnum.UNUSED.getKey())) {
             throw new BusinessCheckException("未使用状态的卡券才能作废");
         }
+
+        if (!userCoupon.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
+
         userCoupon.setStatus(UserCouponStatusEnum.DISABLE.getKey());
 
         // 修改时间
         userCoupon.setUpdateTime(new Date());
 
         // 操作人
-        userCoupon.setOperator(operator);
+        userCoupon.setOperator(accountInfo.getAccountName());
 
         // 更新发券日志为部分作废状态
         mtSendLogMapper.updateSingleForRemove(userCoupon.getUuid(),UserCouponStatusEnum.USED.getKey());

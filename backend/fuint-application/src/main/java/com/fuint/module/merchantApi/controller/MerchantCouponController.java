@@ -1,5 +1,6 @@
 package com.fuint.module.merchantApi.controller;
 
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.ReqCouponDto;
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.param.CouponListParam;
@@ -79,7 +80,7 @@ public class MerchantCouponController extends BaseController {
     @ApiOperation(value = "保存卡券信息")
     @RequestMapping(value = "/saveCoupon", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject saveCoupon(HttpServletRequest request, @RequestBody ReqCouponDto reqCouponDto) throws BusinessCheckException {
+    public ResponseObject saveCoupon(HttpServletRequest request, @RequestBody ReqCouponDto reqCouponDto) {
         Integer merchantId = merchantService.getMerchantId(request.getHeader("merchantNo"));
         UserInfo userInfo = TokenUtil.getUserInfo();
         if (userInfo == null || userInfo.getMobile() == null) {
@@ -91,6 +92,7 @@ public class MerchantCouponController extends BaseController {
             return getFailureResult(201, "您没有操作权限");
         }
         BeanUtils.copyProperties(reqCouponDto, couponInfo);
+
         couponService.updateById(couponInfo);
         return getSuccessResult(couponInfo);
     }
@@ -123,7 +125,10 @@ public class MerchantCouponController extends BaseController {
                 return getFailureResult(1003, "抱歉，该卡券存在店铺使用范围限制，您所在的店铺无发券权限！");
             }
         }
-        ResponseObject result = couponService.sendCoupon(receiveParam.getCouponId(), receiveParam.getUserId(), receiveParam.getNum(), true, null, staff.getRealName());
+        AccountInfo accountInfo = new AccountInfo();
+        accountInfo.setAccountName(staff.getRealName());
+        accountInfo.setMerchantId(staff.getMerchantId());
+        ResponseObject result = couponService.sendCoupon(receiveParam.getCouponId(), receiveParam.getUserId(), receiveParam.getNum(), true, null, accountInfo);
         if (!result.getCode().equals(200)) {
             return getFailureResult(result.getCode(), result.getMessage());
         }

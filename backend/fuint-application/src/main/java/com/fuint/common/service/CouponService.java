@@ -10,6 +10,7 @@ import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtCoupon;
 import com.fuint.repository.model.MtUserCoupon;
+
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.List;
@@ -51,11 +52,11 @@ public interface CouponService extends IService<MtCoupon> {
      * 删除卡券信息
      *
      * @param id       卡券ID
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
-    void deleteCoupon(Long id, String operator) throws BusinessCheckException;
+    void deleteCoupon(Long id, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 获取卡券列表
@@ -72,11 +73,11 @@ public interface CouponService extends IService<MtCoupon> {
      * @param num    发放套数
      * @param sendMessage 是否发送消息
      * @param uuid    批次号
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
-    ResponseObject sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, String operator) throws BusinessCheckException;
+    ResponseObject sendCoupon(Integer couponId, Integer userId, Integer num, Boolean sendMessage, String uuid, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 发放卡券
@@ -85,11 +86,11 @@ public interface CouponService extends IService<MtCoupon> {
      * @param userIds  会员ID
      * @param num      发放套数
      * @param uuid     批次号
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
-    Boolean batchSendCoupon(Integer couponId, List<Integer> userIds, Integer num, String uuid, String operator) throws BusinessCheckException;
+    Boolean batchSendCoupon(Integer couponId, List<Integer> userIds, Integer num, String uuid, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据分组获取卡券列表
@@ -116,11 +117,11 @@ public interface CouponService extends IService<MtCoupon> {
      * 根据券ID删除个人卡券
      *
      * @param id       券ID
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
-    void deleteUserCoupon(Integer id, String operator) throws BusinessCheckException;
+    void deleteUserCoupon(Integer id, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据券ID撤销个人卡券消费流水

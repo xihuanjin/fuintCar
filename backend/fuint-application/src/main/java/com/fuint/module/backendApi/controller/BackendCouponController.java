@@ -169,7 +169,7 @@ public class BackendCouponController extends BaseController {
     @PreAuthorize("@pms.hasPermission('coupon:coupon:index')")
     public ResponseObject delete(@PathVariable("id") Long id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        couponService.deleteCoupon(id, accountInfo.getAccountName());
+        couponService.deleteCoupon(id, accountInfo);
         return getSuccessResult(true);
     }
 
@@ -345,7 +345,7 @@ public class BackendCouponController extends BaseController {
             return getFailureResult(201, "系统参数有误");
         }
 
-        couponService.batchSendCoupon(Integer.parseInt(couponId), userIdList, Integer.parseInt(num), SeqUtil.getUUID(), accountInfo.getAccountName());
+        couponService.batchSendCoupon(Integer.parseInt(couponId), userIdList, Integer.parseInt(num), SeqUtil.getUUID(), accountInfo);
         return getSuccessResult(true);
     }
 }

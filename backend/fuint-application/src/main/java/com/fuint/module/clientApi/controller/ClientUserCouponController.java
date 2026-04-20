@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -81,7 +80,7 @@ public class ClientUserCouponController extends BaseController {
     @ApiOperation(value = "查询会员卡券详情")
     @RequestMapping(value = "/detail", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject detail(HttpServletRequest request, @RequestParam Map<String, Object> param) throws BusinessCheckException, InvocationTargetException, IllegalAccessException {
+    public ResponseObject detail(@RequestParam Map<String, Object> param) throws BusinessCheckException {
         Integer userCouponId = param.get("userCouponId") == null ? 0 : Integer.parseInt(param.get("userCouponId").toString());
         String userCouponCode = param.get("userCouponCode") == null ? "" : param.get("userCouponCode").toString();
 

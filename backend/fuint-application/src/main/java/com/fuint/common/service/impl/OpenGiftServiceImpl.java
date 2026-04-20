@@ -3,7 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.Constants;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.OpenGiftDto;
 import com.fuint.common.enums.MessageEnum;
 import com.fuint.common.enums.StatusEnum;
@@ -160,37 +160,45 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * 根据ID删除数据
      *
      * @param  id 开卡赠礼ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @return
      */
     @Override
     @OperationServiceLog(description = "删除开卡赠礼")
-    public void deleteOpenGift(Integer id, String operator) {
-        MtOpenGift MtOpenGift = mtOpenGiftMapper.selectById(id);
-        if (null == MtOpenGift) {
+    public void deleteOpenGift(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
+        MtOpenGift mtOpenGift = mtOpenGiftMapper.selectById(id);
+        if (null == mtOpenGift) {
             return;
         }
+        if (!accountInfo.getMerchantId().equals(mtOpenGift.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
 
-        MtOpenGift.setStatus(StatusEnum.DISABLE.getKey());
-        MtOpenGift.setUpdateTime(new Date());
+        mtOpenGift.setStatus(StatusEnum.DISABLE.getKey());
+        mtOpenGift.setUpdateTime(new Date());
+        mtOpenGift.setOperator(accountInfo.getAccountName());
 
-        mtOpenGiftMapper.updateById(MtOpenGift);
+        mtOpenGiftMapper.updateById(mtOpenGift);
     }
 
     /**
      * 更新开卡赠礼
      *
      * @param  reqDto 实体参数
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "更新开卡赠礼")
-    public MtOpenGift updateOpenGift(MtOpenGift reqDto) throws BusinessCheckException {
+    public MtOpenGift updateOpenGift(MtOpenGift reqDto, AccountInfo accountInfo) throws BusinessCheckException {
         MtOpenGift mtOpenGift = mtOpenGiftMapper.selectById(reqDto.getId());
         if (mtOpenGift == null) {
             throw new BusinessCheckException("该数据状态异常");
+        }
+        if (!mtOpenGift.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
 
         mtOpenGift.setId(reqDto.getId());
@@ -301,7 +309,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
                            param.setCouponId(item.getCouponId());
                            param.setUserId(userId);
                            param.setNum(item.getCouponNum() == null ? 1 : item.getCouponNum());
-                           ResponseObject result = couponService.sendCoupon(item.getCouponId(), userId, param.getNum(), true, SeqUtil.getUUID(), "");
+                           AccountInfo accountInfo = new AccountInfo();
+                           accountInfo.setMerchantId(mtCoupon.getMerchantId());
+                           accountInfo.setAccountName("系统");
+                           ResponseObject result = couponService.sendCoupon(item.getCouponId(), userId, param.getNum(), true, SeqUtil.getUUID(), accountInfo);
                            if (!result.getCode().equals(200)) {
                                logger.error("会员开卡赠礼赠送卡券失败：", result.getMessage());
                            }

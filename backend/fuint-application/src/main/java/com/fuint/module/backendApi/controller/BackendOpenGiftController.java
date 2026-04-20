@@ -144,7 +144,7 @@ public class BackendOpenGiftController extends BaseController {
 
         if (StringUtil.isNotEmpty(id)) {
             reqDto.setId(Integer.parseInt(id));
-            openGiftService.updateOpenGift(reqDto);
+            openGiftService.updateOpenGift(reqDto, accountInfo);
         } else {
             openGiftService.addOpenGift(reqDto);
         }
@@ -173,7 +173,7 @@ public class BackendOpenGiftController extends BaseController {
         mtOpenGift.setId(id);
         mtOpenGift.setStatus(status);
         mtOpenGift.setOperator(accountInfo.getAccountName());
-        openGiftService.updateOpenGift(mtOpenGift);
+        openGiftService.updateOpenGift(mtOpenGift, accountInfo);
         return getSuccessResult(true);
     }
 
@@ -188,7 +188,7 @@ public class BackendOpenGiftController extends BaseController {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         String operator = accountInfo.getAccountName();
-        openGiftService.deleteOpenGift(id, operator);
+        openGiftService.deleteOpenGift(id, accountInfo);
 
         return getSuccessResult(true);
     }

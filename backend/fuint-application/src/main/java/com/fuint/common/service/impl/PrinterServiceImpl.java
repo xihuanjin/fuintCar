@@ -341,7 +341,7 @@ public class PrinterServiceImpl extends ServiceImpl<MtPrinterMapper, MtPrinter> 
             PrinterUtil.updPrinter(restRequest);
         }
         if (mtPrinter.getStatus().equals(StatusEnum.DISABLE.getKey())) {
-            deletePrinter(mtPrinter.getId(), mtPrinter.getOperator());
+            deletePrinter(mtPrinter.getId(), accountInfo.getAccountName());
         }
 
         mtPrinter.setUpdateTime(new Date());
