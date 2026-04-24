@@ -14,7 +14,6 @@ import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtUser;
-import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;

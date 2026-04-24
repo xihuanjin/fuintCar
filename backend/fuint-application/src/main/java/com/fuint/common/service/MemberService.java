@@ -42,7 +42,7 @@ public interface MemberService extends IService<MtUser> {
      * @param accessToken
      * @return
      * */
-    MtUser getCurrentUserInfo(HttpServletRequest request, Integer userId, String accessToken) throws BusinessCheckException;
+    MtUser getCurrentUserInfo(HttpServletRequest request, Integer userId, String accessToken);
 
     /**
      * 分页查询会员列表
@@ -78,10 +78,9 @@ public interface MemberService extends IService<MtUser> {
      * @param  merchantId 商户ID
      * @param  mobile 手机号
      * @param  shareId 分享用户ID
-     * @throws BusinessCheckException
      * @return
      */
-    MtUser addMemberByMobile(Integer merchantId, String mobile, String shareId) throws BusinessCheckException;
+    MtUser addMemberByMobile(Integer merchantId, String mobile, String shareId);
 
     /**
      * 根据会员ID获取会员信息

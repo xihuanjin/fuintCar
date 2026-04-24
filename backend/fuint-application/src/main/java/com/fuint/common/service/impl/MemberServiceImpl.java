@@ -153,7 +153,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
      * @return
      * */
     @Override
-    public MtUser getCurrentUserInfo(HttpServletRequest request, Integer userId, String token) throws BusinessCheckException {
+    public MtUser getCurrentUserInfo(HttpServletRequest request, Integer userId, String token) {
         MtUser mtUser = null;
 
         // 没有会员信息，则查询是否是后台收银员下单
@@ -346,8 +346,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
         // 用户名就是手机号
         if (StringUtil.isNotEmpty(mtUser.getName()) && StringUtil.isEmpty(mtUser.getMobile()) && PhoneFormatCheckUtils.isChinaPhoneLegal(mtUser.getName())) {
             mtUser.setMobile(mtUser.getName());
-            String name = mtUser.getName().replaceAll("(\\d{3})\\d{4}(\\d{4})","$1****$2");
-            mtUser.setName(name);
+            mtUser.setName(CommonUtil.hidePhone(mtUser.getName()));
         }
 
         // 手机号已存在
@@ -511,11 +510,10 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "通过手机号新增会员")
-    public MtUser addMemberByMobile(Integer merchantId, String mobile, String shareId) throws BusinessCheckException {
+    public MtUser addMemberByMobile(Integer merchantId, String mobile, String shareId) {
         MtUser mtUser = new MtUser();
         mtUser.setUserNo(CommonUtil.createUserNo());
-        String nickName = mobile.replaceAll("(\\d{3})\\d{4}(\\d{4})","$1****$2");
-        mtUser.setName(nickName);
+        mtUser.setName(CommonUtil.hidePhone(mobile));
         mtUser.setMobile(mobile);
         MtUserGrade grade = userGradeService.getInitUserGrade(merchantId);
         if (grade != null) {
@@ -708,7 +706,7 @@ public class MemberServiceImpl extends ServiceImpl<MtUserMapper, MtUser> impleme
 
             // 昵称为空，用手机号
             if (StringUtil.isEmpty(nickName) && StringUtil.isNotEmpty(mobile)) {
-                nickName = mobile.replaceAll("(\\d{3})\\d{4}(\\d{4})","$1****$2");
+                nickName = CommonUtil.hidePhone(mobile);
             }
             mtUser.setMerchantId(merchantId);
             String userNo = CommonUtil.createUserNo();

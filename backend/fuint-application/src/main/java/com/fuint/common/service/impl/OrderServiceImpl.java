@@ -189,14 +189,14 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
     /**
      * 获取用户订单列表
      * @param  orderListParam
-     * @throws BusinessCheckException
+     * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public PaginationResponse getUserOrderList(OrderListParam orderListParam) throws BusinessCheckException {
+    public PaginationResponse getUserOrderList(OrderListParam orderListParam) {
         Integer pageNumber = orderListParam.getPage() == null ? Constants.PAGE_NUMBER : orderListParam.getPage();
         Integer pageSize = orderListParam.getPageSize() == null ? Constants.PAGE_SIZE : orderListParam.getPageSize();
-        String userId = orderListParam.getUserId() == null ? "" : orderListParam.getUserId();
+        Integer userId = orderListParam.getUserId() == null ? 0 : orderListParam.getUserId();
         Integer merchantId = orderListParam.getMerchantId() == null ? 0 : orderListParam.getMerchantId();
         Integer storeId = orderListParam.getStoreId() == null ? 0 : orderListParam.getStoreId();
         String status = orderListParam.getStatus() == null ? "": orderListParam.getStatus();
@@ -288,10 +288,10 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
         if (StringUtil.isNotBlank(mobile)) {
             MtUser userInfo = memberService.queryMemberByMobile(merchantId, mobile);
             if (userInfo != null) {
-                userId = userInfo.getId().toString();
+                userId = userInfo.getId();
             }
         }
-        if (StringUtil.isNotBlank(userId) && Integer.parseInt(userId) > 0) {
+        if (userId != null && userId > 0) {
             lambdaQueryWrapper.eq(MtOrder::getUserId, userId);
         }
         if (merchantId != null && merchantId > 0) {
@@ -1141,7 +1141,6 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
      * 获取订单详情
      *
      * @param  orderId 订单ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -1165,11 +1164,10 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
      * 根据ID获取我的订单详情
      *
      * @param  orderId 订单ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public UserOrderDto getMyOrderById(Integer orderId) throws BusinessCheckException {
+    public UserOrderDto getMyOrderById(Integer orderId) {
         MtOrder mtOrder = mtOrderMapper.selectById(orderId);
         UserOrderDto orderInfo = getOrderDetail(mtOrder, true, true);
 
@@ -1186,13 +1184,12 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
      *
      * @param orderId 订单ID
      * @param remark 取消备注
-     * @throws BusinessCheckException
      * @return
      * */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "取消订单")
-    public MtOrder cancelOrder(Integer orderId, String remark) throws BusinessCheckException {
+    public MtOrder cancelOrder(Integer orderId, String remark) {
         MtOrder mtOrder = mtOrderMapper.selectById(orderId);
         logger.info("orderService.cancelOrder orderId = {}, remark = {}", orderId, remark);
 
@@ -1301,11 +1298,10 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
      * 根据订单号获取订单详情
      *
      * @param  orderSn 订单号
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public UserOrderDto getOrderByOrderSn(String orderSn) throws BusinessCheckException {
+    public UserOrderDto getOrderByOrderSn(String orderSn) {
         MtOrder orderInfo = mtOrderMapper.findByOrderSn(orderSn);
         if (orderInfo == null) {
             return null;
@@ -1704,7 +1700,7 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             userInfo.setId(user.getId());
             userInfo.setName(user.getName());
             if (StringUtil.isNotEmpty(user.getMobile())) {
-                userInfo.setMobile(user.getMobile().replaceAll("(\\d{3})\\d{4}(\\d{4})", "$1****$2"));
+                userInfo.setMobile(CommonUtil.hidePhone(user.getMobile()));
             }
             userInfo.setCardNo(user.getCarNo());
             userInfo.setAddress(user.getAddress());

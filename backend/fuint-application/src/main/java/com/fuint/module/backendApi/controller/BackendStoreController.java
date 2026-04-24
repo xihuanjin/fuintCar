@@ -133,7 +133,7 @@ public class BackendStoreController extends BaseController {
         String status = params.get("status") != null ? params.get("status").toString() : StatusEnum.ENABLED.getKey();
         Integer storeId = params.get("storeId") == null ? 0 : Integer.parseInt(params.get("storeId").toString());
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        storeService.updateStatus(storeId, accountInfo.getAccountName(), status);
+        storeService.updateStatus(storeId, accountInfo, status);
         return getSuccessResult(true);
     }
 

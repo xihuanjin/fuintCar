@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.StoreDto;
 import com.fuint.common.dto.StoreInfo;
 import com.fuint.common.enums.QrCodeEnum;
@@ -18,7 +19,6 @@ import com.fuint.common.service.WeixinService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.bean.StoreDistanceBean;
 import com.fuint.repository.mapper.MtMerchantMapper;
@@ -338,7 +338,7 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
      * 更新店铺状态
      *
      * @param  id       店铺ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @param  status   状态
      * @throws BusinessCheckException
      * @return
@@ -346,15 +346,18 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "修改店铺状态")
-    public void updateStatus(Integer id, String operator, String status) throws BusinessCheckException {
+    public void updateStatus(Integer id, AccountInfo accountInfo, String status) throws BusinessCheckException {
         MtStore mtStore = queryStoreById(id);
         if (null == mtStore) {
             throw new BusinessCheckException("该店铺不存在.");
         }
+        if (accountInfo.getMerchantId() > 0 && !mtStore.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限.");
+        }
 
         mtStore.setStatus(status);
         mtStore.setUpdateTime(new Date());
-        mtStore.setOperator(operator);
+        mtStore.setOperator(accountInfo.getAccountName());
 
         // 删除店铺
         if (status.equals(StatusEnum.DISABLE.getKey())) {

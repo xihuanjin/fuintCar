@@ -1,6 +1,7 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.StoreDto;
 import com.fuint.common.dto.StoreInfo;
 import com.fuint.common.param.StorePage;
@@ -70,11 +71,11 @@ public interface StoreService extends IService<MtStore> {
      * 更新店铺状态
      *
      * @param  id       店铺ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @param  status   状态
      * @throws BusinessCheckException
      */
-    void updateStatus(Integer id, String operator, String status) throws BusinessCheckException;
+    void updateStatus(Integer id, AccountInfo accountInfo, String status) throws BusinessCheckException;
 
     /**
      * 根据条件查询店铺列表

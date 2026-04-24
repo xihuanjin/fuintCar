@@ -3,7 +3,6 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.Constants;
 import com.fuint.common.dto.*;
 import com.fuint.common.enums.*;
 import com.fuint.common.param.RefundPage;
@@ -106,7 +105,7 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
      * @return
      */
     @Override
-    public PaginationResponse<RefundDto> getRefundListByPagination(RefundPage refundPage) throws BusinessCheckException {
+    public PaginationResponse<RefundDto> getRefundListByPagination(RefundPage refundPage) {
         Page<MtBanner> pageHelper = PageHelper.startPage(refundPage.getPage(), refundPage.getPageSize());
         LambdaQueryWrapper<MtRefund> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtRefund::getStatus, StatusEnum.DISABLE.getKey());
@@ -266,7 +265,6 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
      * 创建售后订单
      *
      * @param refundDto 订单参数
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -318,11 +316,10 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
      * 根据ID获取订单详情
      *
      * @param  id 售后订单ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public RefundDto getRefundById(Integer id) throws BusinessCheckException {
+    public RefundDto getRefundById(Integer id) {
         MtRefund mtRefund = mtRefundMapper.selectById(id);
         if (mtRefund != null) {
             RefundDto refundDto = new RefundDto();
@@ -352,7 +349,6 @@ public class RefundServiceImpl extends ServiceImpl<MtRefundMapper, MtRefund> imp
      * 根据订单ID获取售后订单信息
      *
      * @param  orderId 订单ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override

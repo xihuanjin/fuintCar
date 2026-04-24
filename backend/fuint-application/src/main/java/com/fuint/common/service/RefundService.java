@@ -11,7 +11,6 @@ import com.fuint.module.clientApi.request.RefundListRequest;
 import com.fuint.repository.model.MtRefund;
 
 import java.util.Date;
-import java.util.Map;
 
 /**
  * 售后业务接口
@@ -27,16 +26,15 @@ public interface RefundService extends IService<MtRefund> {
      * @param refundPage
      * @return
      */
-    PaginationResponse<RefundDto> getRefundListByPagination(RefundPage refundPage) throws BusinessCheckException;
+    PaginationResponse<RefundDto> getRefundListByPagination(RefundPage refundPage);
 
     /**
      * 获取用户的售后订单
      *
      * @param  param 查询参数
-     * @throws BusinessCheckException
      * @return
      * */
-    ResponseObject getUserRefundList(RefundListRequest param) throws BusinessCheckException;
+    ResponseObject getUserRefundList(RefundListRequest param);
 
     /**
      * 创建售后订单
@@ -51,17 +49,17 @@ public interface RefundService extends IService<MtRefund> {
      * 根据ID获取售后订单信息
      *
      * @param id ID
-     * @throws BusinessCheckException
+     * @return
      */
-    RefundDto getRefundById(Integer id) throws BusinessCheckException;
+    RefundDto getRefundById(Integer id);
 
     /**
      * 根据订单ID获取售后订单信息
      *
      * @param  orderId
-     * @throws BusinessCheckException
+     * @return
      */
-    MtRefund getRefundByOrderId(Integer orderId) throws BusinessCheckException;
+    MtRefund getRefundByOrderId(Integer orderId);
 
     /**
      * 更新售后订单

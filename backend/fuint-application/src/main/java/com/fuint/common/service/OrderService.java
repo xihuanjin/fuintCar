@@ -29,10 +29,9 @@ public interface OrderService extends IService<MtOrder> {
      * 获取用户的订单
      *
      * @param  orderListParam
-     * @throws BusinessCheckException
      * @return
      * */
-    PaginationResponse getUserOrderList(OrderListParam orderListParam) throws BusinessCheckException;
+    PaginationResponse getUserOrderList(OrderListParam orderListParam);
 
     /**
      * 创建订单
@@ -57,10 +56,9 @@ public interface OrderService extends IService<MtOrder> {
      * 获取订单详情
      *
      * @param  id
-     * @throws BusinessCheckException
      * @return
      */
-    MtOrder getOrderInfo(Integer id) throws BusinessCheckException;
+    MtOrder getOrderInfo(Integer id);
 
     /**
      * 根据ID获取订单
@@ -73,11 +71,10 @@ public interface OrderService extends IService<MtOrder> {
     /**
      * 根据ID获取订单
      *
-     * @param  id 订单ID
-     * @throws BusinessCheckException
+     * @param  orderId 订单ID
      * @return
      */
-    UserOrderDto getMyOrderById(Integer id) throws BusinessCheckException;
+    UserOrderDto getMyOrderById(Integer orderId);
 
     /**
      * 取消订单
@@ -94,19 +91,17 @@ public interface OrderService extends IService<MtOrder> {
      *
      * @param  orderId 订单ID
      * @param  operator 操作人
-     * @throws BusinessCheckException
      * @return
      */
-    void deleteOrder(Integer orderId, String operator) throws BusinessCheckException;
+    void deleteOrder(Integer orderId, String operator);
 
     /**
      * 根据订单号获取订单
      *
      * @param  orderSn
-     * @throws BusinessCheckException
      * @return
      */
-    UserOrderDto getOrderByOrderSn(String orderSn) throws BusinessCheckException;
+    UserOrderDto getOrderByOrderSn(String orderSn);
 
     /**
      * 根据订单号获取订单
