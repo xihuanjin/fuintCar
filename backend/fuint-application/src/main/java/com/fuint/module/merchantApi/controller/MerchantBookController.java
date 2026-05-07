@@ -1,7 +1,7 @@
 package com.fuint.module.merchantApi.controller;
 
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.UserInfo;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.enums.BookStatusEnum;
 import com.fuint.common.param.BookItemPage;
 import com.fuint.common.service.BookItemService;
@@ -109,7 +109,7 @@ public class MerchantBookController extends BaseController {
 
         Integer bookId = param.getBookId();
         if (bookId == null) {
-            return getFailureResult(201, "预约ID不能为空");
+            return getFailureResult(2000, "预约ID不能为空");
         }
 
         MtBookItem bookInfo = bookItemService.getBookItemById(param.getBookId());
@@ -170,7 +170,7 @@ public class MerchantBookController extends BaseController {
         bookItem.setOperator(staffInfo.getRealName());
         AccountInfo accountInfo = new AccountInfo();
         accountInfo.setMerchantId(staffInfo.getMerchantId());
-        accountInfo.setAccountName(staffInfo.getRealName());
+        accountInfo.setStoreId(staffInfo.getStoreId());
         bookItemService.updateBookItem(bookItem, accountInfo);
         return getSuccessResult(true);
     }

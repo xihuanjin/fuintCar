@@ -3,8 +3,8 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.OpenGiftDto;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.enums.MessageEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
@@ -104,8 +104,8 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
         List<MtOpenGift> openGiftList = mtOpenGiftMapper.selectList(lambdaQueryWrapper);
         List<OpenGiftDto> dataList = new ArrayList<>();
         for (MtOpenGift item : openGiftList) {
-             OpenGiftDto dto = dealDetail(item);
-             dataList.add(dto);
+            OpenGiftDto dto = dealDetail(item);
+            dataList.add(dto);
         }
 
         PageRequest pageRequest = PageRequest.of(openGiftPage.getPage(), openGiftPage.getPageSize());
@@ -129,13 +129,11 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "新增开卡赠礼")
     public MtOpenGift addOpenGift(MtOpenGift mtOpenGift) throws BusinessCheckException {
-        mtOpenGift.setUpdateTime(new Date());
-        mtOpenGift.setCreateTime(new Date());
-
         if (mtOpenGift.getMerchantId() == null || mtOpenGift.getMerchantId() < 1) {
             throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
         }
-
+        mtOpenGift.setUpdateTime(new Date());
+        mtOpenGift.setCreateTime(new Date());
         if (mtOpenGift.getCouponNum() != null && mtOpenGift.getCouponNum() > 100) {
             throw new BusinessCheckException("开卡赠礼卡券数量不能大于100");
         }
@@ -161,6 +159,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      *
      * @param  id 开卡赠礼ID
      * @param  accountInfo 操作人
+     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -168,15 +167,14 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
     public void deleteOpenGift(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
         MtOpenGift mtOpenGift = mtOpenGiftMapper.selectById(id);
         if (null == mtOpenGift) {
-            return;
+            throw new BusinessCheckException("数据不存在，删除开卡赠礼失败");
         }
-        if (!accountInfo.getMerchantId().equals(mtOpenGift.getMerchantId())) {
+        if (accountInfo.getMerchantId() > 0 && !mtOpenGift.getMerchantId().equals(accountInfo.getMerchantId())) {
             throw new BusinessCheckException("不同商户，无操作权限");
         }
 
         mtOpenGift.setStatus(StatusEnum.DISABLE.getKey());
         mtOpenGift.setUpdateTime(new Date());
-        mtOpenGift.setOperator(accountInfo.getAccountName());
 
         mtOpenGiftMapper.updateById(mtOpenGift);
     }
@@ -185,7 +183,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * 更新开卡赠礼
      *
      * @param  reqDto 实体参数
-     * @param accountInfo 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
@@ -243,13 +241,13 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * @return
      * */
     @Override
-    public Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) {
+    public Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) throws BusinessCheckException {
         if (gradeId == null || gradeId.compareTo(0) <= 0) {
             return false;
         }
         MtUser user = mtUserMapper.selectById(userId);
         if (user == null) {
-            return false;
+            throw new BusinessCheckException("会员状态异常");
         }
         if (user.getIsStaff().equals(YesOrNoEnum.YES.getKey())) {
             return false;
@@ -288,11 +286,10 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
         if (openGiftList.size() > 0) {
             Integer totalPoint = 0;
             BigDecimal totalAmount = new BigDecimal("0");
-            for(MtOpenGift item : openGiftList) {
+            for (MtOpenGift item : openGiftList) {
                // 加积分
                if (item.getPoint() > 0) {
                    MtPoint reqPointDto = new MtPoint();
-                   reqPointDto.setMerchantId(user.getMerchantId());
                    reqPointDto.setUserId(userId);
                    reqPointDto.setAmount(item.getPoint());
                    reqPointDto.setDescription("开卡赠送"+ item.getPoint() +"积分");
@@ -309,10 +306,7 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
                            param.setCouponId(item.getCouponId());
                            param.setUserId(userId);
                            param.setNum(item.getCouponNum() == null ? 1 : item.getCouponNum());
-                           AccountInfo accountInfo = new AccountInfo();
-                           accountInfo.setMerchantId(mtCoupon.getMerchantId());
-                           accountInfo.setAccountName("系统");
-                           ResponseObject result = couponService.sendCoupon(item.getCouponId(), userId, param.getNum(), true, SeqUtil.getUUID(), accountInfo);
+                           ResponseObject result = couponService.sendCoupon(item.getCouponId(), userId, param.getNum(), true, SeqUtil.getUUID(), new AccountInfo());
                            if (!result.getCode().equals(200)) {
                                logger.error("会员开卡赠礼赠送卡券失败：", result.getMessage());
                            }
@@ -353,22 +347,22 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * @return OpenGiftDto
      * */
     private OpenGiftDto dealDetail(MtOpenGift openGiftInfo) {
-        OpenGiftDto dto = new OpenGiftDto();
+        OpenGiftDto openGiftDto = new OpenGiftDto();
 
-        dto.setId(openGiftInfo.getId());
-        dto.setCreateTime(DateUtil.formatDate(openGiftInfo.getCreateTime(), "yyyy.MM.dd HH:mm"));
-        dto.setUpdateTime(DateUtil.formatDate(openGiftInfo.getUpdateTime(), "yyyy.MM.dd HH:mm"));
-        dto.setStatus(openGiftInfo.getStatus());
-        dto.setCouponNum(openGiftInfo.getCouponNum());
-        dto.setPoint(openGiftInfo.getPoint());
-        dto.setOperator(openGiftInfo.getOperator());
+        openGiftDto.setId(openGiftInfo.getId());
+        openGiftDto.setCreateTime(DateUtil.formatDate(openGiftInfo.getCreateTime(), "yyyy.MM.dd HH:mm"));
+        openGiftDto.setUpdateTime(DateUtil.formatDate(openGiftInfo.getUpdateTime(), "yyyy.MM.dd HH:mm"));
+        openGiftDto.setStatus(openGiftInfo.getStatus());
+        openGiftDto.setCouponNum(openGiftInfo.getCouponNum());
+        openGiftDto.setPoint(openGiftInfo.getPoint());
+        openGiftDto.setOperator(openGiftInfo.getOperator());
 
         MtCoupon couponInfo = couponService.queryCouponById(openGiftInfo.getCouponId());
-        dto.setCouponInfo(couponInfo);
+        openGiftDto.setCouponInfo(couponInfo);
 
         MtUserGrade gradeInfo = userGradeService.queryUserGradeById(openGiftInfo.getMerchantId(), openGiftInfo.getGradeId(), 0);
-        dto.setGradeInfo(gradeInfo);
+        openGiftDto.setGradeInfo(gradeInfo);
 
-        return dto;
+        return openGiftDto;
     }
 }

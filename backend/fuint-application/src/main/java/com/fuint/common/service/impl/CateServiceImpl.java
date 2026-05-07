@@ -3,8 +3,8 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.GoodsCateDto;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.GoodsCatePage;
 import com.fuint.common.service.CateService;
@@ -61,7 +61,7 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
      * @return
      */
     @Override
-    public PaginationResponse<GoodsCateDto> queryCateListByPagination(GoodsCatePage catePage) throws BusinessCheckException {
+    public PaginationResponse<GoodsCateDto> queryCateListByPagination(GoodsCatePage catePage) {
         Page<MtGoodsCate> pageHelper = PageHelper.startPage(catePage.getPage(), catePage.getPageSize());
         LambdaQueryWrapper<MtGoodsCate> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtGoodsCate::getStatus, StatusEnum.DISABLE.getKey());
@@ -89,15 +89,15 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
         List<GoodsCateDto> dataList = new ArrayList<>();
         List<MtGoodsCate> cateList = cateMapper.selectList(lambdaQueryWrapper);
         for (MtGoodsCate mtCate : cateList) {
-            GoodsCateDto cateDto = new GoodsCateDto();
-            BeanUtils.copyProperties(mtCate, cateDto);
-            if (mtCate.getStoreId() != null && mtCate.getStoreId() > 0) {
-                MtStore storeInfo = storeService.queryStoreById(mtCate.getStoreId());
-                if (storeInfo != null) {
-                    cateDto.setStoreName(storeInfo.getName());
-                }
-            }
-            dataList.add(cateDto);
+             GoodsCateDto cateDto = new GoodsCateDto();
+             BeanUtils.copyProperties(mtCate, cateDto);
+             if (mtCate.getStoreId() != null && mtCate.getStoreId() > 0) {
+                 MtStore storeInfo = storeService.queryStoreById(mtCate.getStoreId());
+                 if (storeInfo != null) {
+                     cateDto.setStoreName(storeInfo.getName());
+                 }
+             }
+             dataList.add(cateDto);
         }
         PageRequest pageRequest = PageRequest.of(catePage.getPage(), catePage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
@@ -150,7 +150,7 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
      * 根据ID获取分类信息
      *
      * @param  id 分类ID
-     * @throws BusinessCheckException
+     * @return
      */
     @Override
     public MtGoodsCate queryCateById(Integer id) {
@@ -161,12 +161,13 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
      * 根据ID删除分类信息
      *
      * @param id ID
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @OperationServiceLog(description = "删除商品分类")
-    public void deleteCate(Integer id, String operator) throws BusinessCheckException {
+    public void deleteCate(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
         MtGoodsCate cateInfo = queryCateById(id);
 
         Map<String, Object> params = new HashMap<>();
@@ -178,7 +179,10 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
             throw new BusinessCheckException("删除失败，该分类有商品存在");
         }
         if (null == cateInfo) {
-            return;
+            throw new BusinessCheckException("分类不存在");
+        }
+        if (!cateInfo.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
         cateInfo.setStatus(StatusEnum.DISABLE.getKey());
         cateInfo.setUpdateTime(new Date());
@@ -190,7 +194,9 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
      * 修改分类
      *
      * @param reqDto
+     * @param accountInfo
      * @throws BusinessCheckException
+     * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -201,9 +207,11 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
             log.error("该分类状态异常");
             throw new BusinessCheckException("该分类状态异常");
         }
-        if (accountInfo != null && accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 
-            && !mtCate.getMerchantId().equals(accountInfo.getMerchantId())) {
-            throw new BusinessCheckException("不同商户，没有操作权限");
+        if (mtCate.getMerchantId() == null || mtCate.getMerchantId() < 1) {
+            throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
+        }
+        if (!mtCate.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
         mtCate.setId(reqDto.getId());
         if (reqDto.getLogo() != null) {
@@ -221,7 +229,7 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
         }
         if (reqDto.getStatus() != null) {
             if (reqDto.getStatus().equals(StatusEnum.DISABLE.getKey())) {
-                deleteCate(mtCate.getId(), reqDto.getOperator());
+                deleteCate(mtCate.getId(), accountInfo);
             }
             mtCate.setStatus(reqDto.getStatus());
         }
@@ -230,9 +238,6 @@ public class CateServiceImpl extends ServiceImpl<MtGoodsCateMapper, MtGoodsCate>
         }
         if (reqDto.getMerchantId() != null && reqDto.getMerchantId() > 0) {
             mtCate.setMerchantId(reqDto.getMerchantId());
-        }
-        if (mtCate.getMerchantId() == null || mtCate.getMerchantId() < 1) {
-            throw new BusinessCheckException("平台方帐号无法执行该操作，请使用商户帐号操作");
         }
         if (reqDto.getStoreId() != null) {
             mtCate.setStoreId(reqDto.getStoreId());

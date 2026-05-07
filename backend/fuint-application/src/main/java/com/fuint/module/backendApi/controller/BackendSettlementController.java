@@ -6,6 +6,7 @@ import com.fuint.common.dto.ParamDto;
 import com.fuint.common.dto.SettlementDto;
 import com.fuint.common.enums.SettleStatusEnum;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.SettlementPage;
 import com.fuint.common.service.MerchantService;
 import com.fuint.common.service.SettlementService;
 import com.fuint.common.service.StoreService;
@@ -65,37 +66,20 @@ public class BackendSettlementController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('settlement:index')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String mobile = request.getParameter("mobile") == null ? "" : request.getParameter("mobile");
-        String userId = request.getParameter("userId") == null ? "" : request.getParameter("userId");
-        String status = request.getParameter("status") == null ? StatusEnum.ENABLED.getKey() : request.getParameter("status");
-
+    public ResponseObject list(@ModelAttribute SettlementPage settlementPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
-        Map<String, Object> searchParams = new HashMap<>();
-        if (StringUtil.isNotEmpty(mobile)) {
-            searchParams.put("mobile", mobile);
-        }
-        if (StringUtil.isNotEmpty(userId)) {
-            searchParams.put("userId", userId);
-        }
-        if (StringUtil.isNotEmpty(status)) {
-            searchParams.put("status", status);
-        }
-        Integer storeId = accountInfo.getStoreId();
-        if (storeId != null && storeId > 0) {
-            searchParams.put("storeId", storeId);
-        }
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            searchParams.put("merchantId", accountInfo.getMerchantId());
+            settlementPage.setMerchantId(accountInfo.getMerchantId());
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            settlementPage.setStoreId(accountInfo.getStoreId());
         }
 
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
         List<MtMerchant> merchantList = merchantService.getMyMerchantList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
 
-        PaginationResponse<MtSettlement> paginationResponse = settlementService.querySettlementListByPagination(new PaginationRequest(page, pageSize, searchParams));
+        PaginationResponse<MtSettlement> paginationResponse = settlementService.querySettlementListByPagination(settlementPage);
 
         // 结算状态
         List<ParamDto> statusList = SettleStatusEnum.getSettleStatusList();
@@ -168,7 +152,7 @@ public class BackendSettlementController extends BaseController {
         if (settlementId == null) {
             return getFailureResult(201, "参数有误");
         }
-        settlementService.doConfirm(settlementId, accountInfo.getAccountName());
+        settlementService.doConfirm(settlementId, accountInfo);
         return getSuccessResult(true);
     }
 }

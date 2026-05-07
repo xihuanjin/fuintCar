@@ -1,7 +1,7 @@
 package com.fuint.common.service;
 
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.OpenGiftDto;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.param.OpenGiftPage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.ResponseObject;
@@ -26,7 +26,7 @@ public interface OpenGiftService {
     /**
      * 新增开卡赠礼
      *
-     * @param  mtOpenGift
+     * @param mtOpenGift
      * @throws BusinessCheckException
      * @return
      */
@@ -54,6 +54,7 @@ public interface OpenGiftService {
      * 更新开卡赠礼
      *
      * @param mtOpenGift
+     * @param accountInfo
      * @throws BusinessCheckException
      * @return
      * */
@@ -65,7 +66,8 @@ public interface OpenGiftService {
      * @param userId 会员ID
      * @param gradeId 会员等级
      * @param isNewMember 是否新会员
+     * @throws BusinessCheckException
      * @return
      * */
-    Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember);
+    Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) throws BusinessCheckException;
 }

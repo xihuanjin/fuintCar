@@ -3,10 +3,9 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.BookItemDto;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.enums.BookStatusEnum;
-import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BookItemPage;
 import com.fuint.common.param.BookableParam;
 import com.fuint.common.service.BookItemService;
@@ -17,14 +16,15 @@ import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.*;
+import com.fuint.common.enums.StatusEnum;
 import com.fuint.repository.model.*;
 import com.fuint.utils.StringUtil;
-import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.github.pagehelper.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
@@ -109,13 +109,12 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
         List<BookItemDto> dataList = new ArrayList<>();
         if (bookItemList != null && bookItemList.size() > 0) {
             for (MtBookItem mtBookItem : bookItemList) {
-                BookItemDto bookItemDto = new BookItemDto();
-                BeanUtils.copyProperties(mtBookItem, bookItemDto);
-                MtBook mtBook = mtBookMapper.selectById(mtBookItem.getBookId());
-                if (mtBook != null) {
-                    bookItemDto.setBookName(mtBook.getName());
-                }
-                bookItemDto.setStatusName(BookStatusEnum.getValue(bookItemDto.getStatus()));
+                 BookItemDto bookItemDto = new BookItemDto();
+                 BeanUtils.copyProperties(mtBookItem, bookItemDto);
+                 MtBook mtBook = mtBookMapper.selectById(mtBookItem.getBookId());
+                 if (mtBook != null) {
+                     bookItemDto.setBookName(mtBook.getName());
+                 }
                 if (mtBookItem.getGoodsId() != null && mtBookItem.getGoodsId() > 0) {
                     MtOrderGoods mtOrderGoods = mtOrderGoodsMapper.selectById(mtBookItem.getGoodsId());
                     if (mtOrderGoods != null) {
@@ -125,7 +124,8 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
                         }
                     }
                 }
-                dataList.add(bookItemDto);
+                 bookItemDto.setStatusName(BookStatusEnum.getValue(bookItemDto.getStatus()));
+                 dataList.add(bookItemDto);
             }
         }
 
@@ -230,14 +230,13 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
      * 根据ID获取预约订单详情
      *
      * @param  id 预约订单ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override
-    public BookItemDto getBookDetail(Integer id) throws BusinessCheckException {
+    public BookItemDto getBookDetail(Integer id) {
         MtBookItem mtBookItem = mtBookItemMapper.selectById(id);
         if (mtBookItem == null) {
-            throw new BusinessCheckException("预约不存在.");
+            return null;
         }
         BookItemDto bookItemDto = new BookItemDto();
         BeanUtils.copyProperties(mtBookItem, bookItemDto);
@@ -254,7 +253,6 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
             }
         }
         bookItemDto.setStatusName(BookStatusEnum.getValue(bookItemDto.getStatus()));
-
         return bookItemDto;
     }
 
@@ -262,6 +260,7 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
      * 修改预约订单
      *
      * @param  mtBookItem
+     * @param  accountInfo
      * @throws BusinessCheckException
      * @return
      */
@@ -273,11 +272,9 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
         if (bookItem == null) {
             throw new BusinessCheckException("该预约订单信息异常");
         }
-        if (accountInfo.getMerchantId() > 0 && !bookItem.getMerchantId().equals(accountInfo.getMerchantId())) {
-            throw new BusinessCheckException("不同商户，没有操作权限");
+        if (accountInfo.getMerchantId() > 0 && !mtBookItem.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
-
-        bookItem.setId(mtBookItem.getId());
         if (mtBookItem.getBookId() != null) {
             bookItem.setBookId(mtBookItem.getBookId());
         }
@@ -352,8 +349,8 @@ public class BookItemServiceImpl extends ServiceImpl<MtBookItemMapper, MtBookIte
     /**
      * 取消预约
      *
-     * @param id 预约ID
-     * @param remark 备注信息
+     * @param  id 预约ID
+     * @param  remark 备注信息
      * @throws BusinessCheckException
      * @return
      * */

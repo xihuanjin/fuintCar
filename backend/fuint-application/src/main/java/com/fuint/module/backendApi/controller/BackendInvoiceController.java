@@ -1,24 +1,21 @@
 package com.fuint.module.backendApi.controller;
 
-import com.fuint.common.Constants;
 import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.param.InvoicePage;
 import com.fuint.common.param.InvoiceParam;
 import com.fuint.common.service.InvoiceService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.model.MtInvoice;
-import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,41 +43,16 @@ public class BackendInvoiceController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('invoice:list')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String title = request.getParameter("title");
-        String orderSn = request.getParameter("orderSn");
-        String mobile = request.getParameter("mobile");
-        String status = request.getParameter("status");
-        String searchStoreId = request.getParameter("storeId");
-
+    public ResponseObject list(@ModelAttribute InvoicePage invoicePage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Integer storeId = accountInfo.getStoreId();
 
-        Map<String, Object> params = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            params.put("merchantId", accountInfo.getMerchantId());
+            invoicePage.setMerchantId(accountInfo.getMerchantId());
         }
-        if (StringUtil.isNotBlank(title)) {
-            params.put("title", title);
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            invoicePage.setStoreId(accountInfo.getStoreId());
         }
-        if (StringUtil.isNotBlank(orderSn)) {
-            params.put("orderSn", orderSn);
-        }
-        if (StringUtil.isNotBlank(mobile)) {
-            params.put("mobile", mobile);
-        }
-        if (StringUtil.isNotBlank(status)) {
-            params.put("status", status);
-        }
-        if (StringUtil.isNotBlank(searchStoreId)) {
-            params.put("storeId", searchStoreId);
-        }
-        if (storeId != null && storeId > 0) {
-            params.put("storeId", storeId);
-        }
-        PaginationResponse<MtInvoice> paginationResponse = invoiceService.queryInvoiceListByPagination(new PaginationRequest(page, pageSize, params));
+        PaginationResponse<MtInvoice> paginationResponse = invoiceService.queryInvoiceListByPagination(invoicePage);
 
         Map<String, Object> result = new HashMap<>();
         result.put("paginationResponse", paginationResponse);

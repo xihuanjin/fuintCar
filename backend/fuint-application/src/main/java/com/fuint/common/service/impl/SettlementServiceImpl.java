@@ -6,18 +6,16 @@ import com.fuint.common.Constants;
 import com.fuint.common.dto.SettlementDto;
 import com.fuint.common.dto.SettlementOrderDto;
 import com.fuint.common.dto.UserOrderDto;
-import com.fuint.common.enums.PayStatusEnum;
-import com.fuint.common.enums.PayTypeEnum;
-import com.fuint.common.enums.SettleStatusEnum;
-import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.enums.*;
 import com.fuint.common.param.OrderListParam;
+import com.fuint.common.param.SettlementPage;
 import com.fuint.common.service.MerchantService;
 import com.fuint.common.service.OrderService;
 import com.fuint.common.service.SettlementService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.module.backendApi.request.SettlementRequest;
 import com.fuint.repository.mapper.MtSettlementMapper;
@@ -66,35 +64,35 @@ public class SettlementServiceImpl implements SettlementService {
     /**
      * 分页查询结算列表
      *
-     * @param paginationRequest
+     * @param settlementPage
      * @return
      */
     @Override
-    public PaginationResponse<MtSettlement> querySettlementListByPagination(PaginationRequest paginationRequest) {
-        Page<MtBanner> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<MtSettlement> querySettlementListByPagination(SettlementPage settlementPage) {
+        Page<MtBanner> pageHelper = PageHelper.startPage(settlementPage.getPage(), settlementPage.getPageSize());
         LambdaQueryWrapper<MtSettlement> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtSettlement::getStatus, StatusEnum.DISABLE.getKey());
 
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = settlementPage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtSettlement::getStatus, status);
         }
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = settlementPage.getMerchantId();
+        if (merchantId != null) {
             lambdaQueryWrapper.eq(MtSettlement::getMerchantId, merchantId);
         }
-        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        Integer storeId = settlementPage.getStoreId();
+        if (storeId != null) {
             lambdaQueryWrapper.eq(MtSettlement::getStoreId, storeId);
         }
-        String description = paginationRequest.getSearchParams().get("description") == null ? "" : paginationRequest.getSearchParams().get("description").toString();
+        String description = settlementPage.getDescription();
         if (StringUtils.isNotBlank(description)) {
             lambdaQueryWrapper.like(MtSettlement::getDescription, description);
         }
         lambdaQueryWrapper.orderByDesc(MtSettlement::getId);
         List<MtSettlement> dataList = mtSettlementMapper.selectList(lambdaQueryWrapper);
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(settlementPage.getPage(), settlementPage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<MtSettlement> paginationResponse = new PaginationResponse(pageImpl, MtSettlement.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -122,6 +120,7 @@ public class SettlementServiceImpl implements SettlementService {
         orderParam.setStartTime(requestParam.getStartTime());
         orderParam.setEndTime(requestParam.getEndTime());
         orderParam.setSettleStatus(SettleStatusEnum.WAIT.getKey());
+        orderParam.setStatus(OrderStatusEnum.COMPLETE.getKey());
         List<String> payType = new ArrayList<>();
         payType.add(PayTypeEnum.JSAPI.getKey());
         payType.add(PayTypeEnum.MICROPAY.getKey());
@@ -149,6 +148,7 @@ public class SettlementServiceImpl implements SettlementService {
         mtSettlement.setMerchantId(requestParam.getMerchantId());
         mtSettlement.setStoreId(requestParam.getStoreId());
         mtSettlement.setSettlementNo(CommonUtil.createSettlementNo());
+
         MtMerchant mtMerchant = merchantService.queryMerchantById(requestParam.getMerchantId());
         BigDecimal percent = new BigDecimal("1");
         if (mtMerchant.getSettleRate() != null && mtMerchant.getSettleRate().compareTo(new BigDecimal("0")) > 0) {
@@ -185,22 +185,25 @@ public class SettlementServiceImpl implements SettlementService {
      * 结算确认
      *
      * @param  settlementId 结算ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "结算确认")
-    public Boolean doConfirm(Integer settlementId, String operator) throws BusinessCheckException {
+    public Boolean doConfirm(Integer settlementId, AccountInfo accountInfo) throws BusinessCheckException {
        MtSettlement mtSettlement = mtSettlementMapper.selectById(settlementId);
        if (mtSettlement == null) {
            throw new BusinessCheckException("结算数据不存在");
        }
+       if (accountInfo.getMerchantId() > 0 && !mtSettlement.getMerchantId().equals(accountInfo.getMerchantId())) {
+           throw new BusinessCheckException("不同商户，没有操作权限");
+       }
        mtSettlement.setStatus(SettleStatusEnum.COMPLETE.getKey());
        mtSettlement.setPayStatus(PayStatusEnum.SUCCESS.getKey());
        mtSettlement.setUpdateTime(new Date());
-       mtSettlement.setOperator(operator);
+       mtSettlement.setOperator(accountInfo.getAccountName());
        mtSettlementMapper.updateById(mtSettlement);
        return true;
     }

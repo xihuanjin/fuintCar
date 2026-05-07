@@ -6,11 +6,11 @@ import com.fuint.common.enums.SettingTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.UserSettingEnum;
 import com.fuint.common.enums.YesOrNoEnum;
-import com.fuint.common.param.MemberListParam;
+import com.fuint.common.param.MemberGroupPage;
+import com.fuint.common.param.MemberPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.*;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -87,7 +87,7 @@ public class BackendMemberController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('member:index')")
-    public ResponseObject list(@ModelAttribute MemberListParam memberPage) throws BusinessCheckException {
+    public ResponseObject list(@ModelAttribute MemberPage memberPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             memberPage.setMerchantId(accountInfo.getMerchantId());
@@ -102,12 +102,14 @@ public class BackendMemberController extends BaseController {
 
         // 会员分组
         List<UserGroupDto> groupList = new ArrayList<>();
-        Map<String, Object> searchParams = new HashMap<>();
+        MemberGroupPage groupPage = new MemberGroupPage();
+        groupPage.setPage(1);
+        groupPage.setPageSize(Constants.MAX_ROWS);
+        groupPage.setStatus(StatusEnum.ENABLED.getKey());
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            searchParams.put("merchantId", accountInfo.getMerchantId());
+            groupPage.setMerchantId(accountInfo.getMerchantId());
         }
-        searchParams.put("status", StatusEnum.ENABLED.getKey());
-        PaginationResponse<UserGroupDto> groupResponse = memberGroupService.queryMemberGroupListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.ALL_ROWS, searchParams));
+        PaginationResponse<UserGroupDto> groupResponse = memberGroupService.queryMemberGroupListByPagination(groupPage);
         if (groupResponse != null && groupResponse.getContent() != null) {
             groupList = groupResponse.getContent();
         }
@@ -165,7 +167,7 @@ public class BackendMemberController extends BaseController {
                 return getFailureResult(1004);
             }
         }
-        memberService.deleteMember(id, accountInfo.getAccountName());
+        memberService.deleteMember(id, accountInfo);
         return getSuccessResult(true);
     }
 
@@ -395,16 +397,18 @@ public class BackendMemberController extends BaseController {
     @ApiOperation(value = "获取会员分组")
     @RequestMapping(value = "/groupList", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject groupList() throws BusinessCheckException {
+    public ResponseObject groupList() {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         // 会员分组
         List<UserGroupDto> groupList = new ArrayList<>();
-        Map<String, Object> searchParams = new HashMap<>();
+        MemberGroupPage groupPage = new MemberGroupPage();
+        groupPage.setPage(1);
+        groupPage.setPageSize(Constants.ALL_ROWS);
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            searchParams.put("merchantId", accountInfo.getMerchantId());
+            groupPage.setMerchantId(accountInfo.getMerchantId());
         }
-        PaginationResponse<UserGroupDto> groupResponse = memberGroupService.queryMemberGroupListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.ALL_ROWS, searchParams));
+        PaginationResponse<UserGroupDto> groupResponse = memberGroupService.queryMemberGroupListByPagination(groupPage);
         if (groupResponse != null && groupResponse.getContent() != null) {
             groupList = groupResponse.getContent();
         }

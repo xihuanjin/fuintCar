@@ -3,8 +3,10 @@ package com.fuint.module.backendApi.controller;
 import com.fuint.common.Constants;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.ParamDto;
+import com.fuint.common.dto.StaffDto;
 import com.fuint.common.enums.StaffCategoryEnum;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.StaffPage;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.PhoneFormatCheckUtils;
@@ -51,41 +53,15 @@ public class BackendStaffController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('staff:list')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String mobile = request.getParameter("mobile");
-        String realName = request.getParameter("realName");
-        String auditedStatus = request.getParameter("auditedStatus");
-        String storeId = request.getParameter("storeId");
-        String category = request.getParameter("category");
-
+    public ResponseObject list(@ModelAttribute StaffPage staffPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
-            storeId = accountInfo.getStoreId().toString();
+            staffPage.setStoreId(accountInfo.getStoreId());
         }
-
-        Map<String, Object> params = new HashMap<>();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            params.put("merchantId", accountInfo.getMerchantId());
+            staffPage.setMerchantId(accountInfo.getMerchantId());
         }
-        if (StringUtil.isNotEmpty(realName)) {
-            params.put("name", realName);
-        }
-        if (StringUtil.isNotEmpty(mobile)) {
-            params.put("mobile", mobile);
-        }
-        if (StringUtil.isNotEmpty(auditedStatus)) {
-            params.put("status", auditedStatus);
-        }
-        if (StringUtil.isNotEmpty(storeId)) {
-            params.put("storeId", storeId);
-        }
-        if (StringUtil.isNotEmpty(category)) {
-            params.put("category", category);
-        }
-
-        PaginationResponse<MtStaff> paginationResponse = staffService.queryStaffListByPagination(new PaginationRequest(page, pageSize, params));
+        PaginationResponse<StaffDto> paginationResponse = staffService.queryStaffListByPagination(staffPage);
 
         // 员工类别列表
         List<ParamDto> categoryList = StaffCategoryEnum.getStaffCategoryList();

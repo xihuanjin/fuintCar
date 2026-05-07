@@ -6,6 +6,7 @@ import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.MemberDetailParam;
 import com.fuint.common.param.MemberInfoParam;
 import com.fuint.common.param.MemberListParam;
+import com.fuint.common.param.MemberPage;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.StaffService;
 import com.fuint.common.service.UserGradeService;
@@ -21,6 +22,7 @@ import com.fuint.repository.model.MtUserGrade;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -88,7 +90,9 @@ public class MerchantMemberController extends BaseController {
             memberListParam.setStoreId(staffInfo.getStoreId());
         }
 
-        PaginationResponse<UserDto> paginationResponse = memberService.queryMemberListByPagination(memberListParam);
+        MemberPage memberPage = new MemberPage();
+        BeanUtils.copyProperties(memberListParam, memberPage);
+        PaginationResponse<UserDto> paginationResponse = memberService.queryMemberListByPagination(memberPage);
 
         // 会员等级列表
         List<MtUserGrade> userGradeList = userGradeService.getMerchantGradeList(staffInfo.getMerchantId(), StatusEnum.ENABLED.getKey());

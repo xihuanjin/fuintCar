@@ -463,6 +463,54 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
     }
 
     /**
+     * 更新商品状态
+     *
+     * @param  goodsId 商品ID
+     * @param  status 状态
+     * @param  accountInfo 操作人
+     * @throws BusinessCheckException
+     * @return
+     */
+    @Override
+    public Boolean updateStatus(Integer goodsId, String status, AccountInfo accountInfo) throws BusinessCheckException {
+        MtGoods mtGoods = queryGoodsById(goodsId);
+        if (null == mtGoods) {
+            throw new BusinessCheckException("该商品不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtGoods.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
+        mtGoods.setStatus(status);
+        mtGoods.setUpdateTime(new Date());
+        mtGoods.setOperator(accountInfo.getAccountName());
+        mtGoodsMapper.updateById(mtGoods);
+        // 删除商品
+        if (status.equals(StatusEnum.DISABLE.getKey())) {
+            Map<String, Object> param = new HashMap<>();
+            param.put("goods_id", goodsId);
+            param.put("status", StatusEnum.ENABLED.getKey());
+            List<MtGoodsSpec> goodsSpecList = mtGoodsSpecMapper.selectByMap(param);
+            if (goodsSpecList != null && goodsSpecList.size() > 0) {
+                for (MtGoodsSpec mtGoodsSpec : goodsSpecList) {
+                    mtGoodsSpec.setStatus(StatusEnum.DISABLE.getKey());
+                    mtGoodsSpecMapper.updateById(mtGoodsSpec);
+                }
+            }
+            Map<String, Object> param1 = new HashMap<>();
+            param1.put("goods_id", goodsId);
+            param1.put("status", StatusEnum.ENABLED.getKey());
+            List<MtGoodsSku> goodsSkuList = mtGoodsSkuMapper.selectByMap(param1);
+            if (goodsSkuList != null && goodsSkuList.size() > 0) {
+                for (MtGoodsSku mtGoodsSku : goodsSkuList) {
+                    mtGoodsSku.setStatus(StatusEnum.DISABLE.getKey());
+                    mtGoodsSkuMapper.updateById(mtGoodsSku);
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
      * 根据ID获取商品信息
      *
      * @param  id 商品ID

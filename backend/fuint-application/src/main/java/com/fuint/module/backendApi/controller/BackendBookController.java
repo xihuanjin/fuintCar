@@ -5,6 +5,7 @@ import com.fuint.common.dto.BookDto;
 import com.fuint.common.dto.BookTimeDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BookPage;
+import com.fuint.common.param.StatusParam;
 import com.fuint.common.service.BookCateService;
 import com.fuint.common.service.BookService;
 import com.fuint.common.service.SettingService;
@@ -14,14 +15,12 @@ import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
-import com.fuint.repository.model.MtBook;
 import com.fuint.repository.model.MtBookCate;
 import com.fuint.repository.model.MtStore;
 import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -100,23 +99,15 @@ public class BackendBookController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('book:index')")
-    public ResponseObject updateStatus(@RequestBody Map<String, Object> params) throws BusinessCheckException, ParseException {
-        String status = params.get("status") != null ? params.get("status").toString() : StatusEnum.ENABLED.getKey();
-        Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
-
+    public ResponseObject updateStatus(@RequestBody StatusParam params) throws BusinessCheckException, ParseException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-
-        BookDto bookDto = bookService.getBookById(id, false);
+        BookDto bookDto = bookService.getBookById(params.getId(), false);
         if (bookDto == null) {
             return getFailureResult(201);
         }
-
-        MtBook mtBook = new MtBook();
-        BeanUtils.copyProperties(bookDto, mtBook);
-
-        mtBook.setOperator(accountInfo.getAccountName());
-        mtBook.setStatus(status);
-        bookService.updateBook(mtBook, accountInfo);
+        bookDto.setOperator(accountInfo.getAccountName());
+        bookDto.setStatus(params.getStatus());
+        bookService.updateBook(bookDto, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -137,11 +128,9 @@ public class BackendBookController extends BaseController {
             bookDto.setStoreId(accountInfo.getStoreId());
         }
 
-        MtBook mtBook = new MtBook();
-        BeanUtils.copyProperties(bookDto, mtBook);
-        mtBook.setMerchantId(accountInfo.getMerchantId());
-        mtBook.setOperator(accountInfo.getAccountName());
-        mtBook.setServiceDates(bookDto.getDates());
+        bookDto.setMerchantId(accountInfo.getMerchantId());
+        bookDto.setOperator(accountInfo.getAccountName());
+        bookDto.setServiceDates(bookDto.getDates());
         String timeStr = "";
         if (bookDto.getTimes() != null && bookDto.getTimes().size() > 0) {
             List<String> timeArr = new ArrayList<>();
@@ -155,14 +144,14 @@ public class BackendBookController extends BaseController {
             }
             if (timeArr.size() > 0) {
                 timeStr = timeArr.stream().collect(Collectors.joining(","));
-                mtBook.setServiceTimes(timeStr);
+                bookDto.setServiceTimes(timeStr);
             }
         }
-        mtBook.setServiceTimes(timeStr);
+        bookDto.setServiceTimes(timeStr);
         if (bookDto.getId() != null) {
-            bookService.updateBook(mtBook, accountInfo);
+            bookService.updateBook(bookDto, accountInfo);
         } else {
-            bookService.addBook(mtBook);
+            bookService.addBook(bookDto);
         }
 
         return getSuccessResult(true);

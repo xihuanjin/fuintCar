@@ -12,7 +12,6 @@ import com.fuint.repository.model.MtGoodsSku;
 import com.fuint.repository.model.MtGoodsSpec;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +42,17 @@ public interface GoodsService {
      * @return
      */
     MtGoods saveGoods(MtGoods reqDto, String storeIds, AccountInfo accountInfo) throws BusinessCheckException;
+
+    /**
+     * 更新商品状态
+     *
+     * @param  goodsId 商品ID
+     * @param  status 状态
+     * @param  accountInfo 操作人
+     * @throws BusinessCheckException
+     * @return
+     */
+    Boolean updateStatus(Integer goodsId, String status, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据ID获取商品信息
@@ -79,7 +89,7 @@ public interface GoodsService {
      * @throws BusinessCheckException
      * @return
      */
-    GoodsDto getGoodsDetail(Integer id, boolean getDeleteSpec) throws InvocationTargetException, IllegalAccessException;
+    GoodsDto getGoodsDetail(Integer id, boolean getDeleteSpec);
 
     /**
      * 根据ID删除

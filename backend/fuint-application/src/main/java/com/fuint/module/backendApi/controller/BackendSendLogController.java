@@ -99,7 +99,7 @@ public class BackendSendLogController extends BaseController {
             return getFailureResult(201, "系统参数有误");
         }
 
-        couponService.removeUserCoupon(id, sendLog.getUuid(), accountInfo.getAccountName());
+        couponService.removeUserCoupon(id, sendLog.getUuid(), accountInfo);
         return getSuccessResult(true);
     }
 }

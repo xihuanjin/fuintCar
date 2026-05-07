@@ -3,13 +3,12 @@ package com.fuint.common.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.ReqCouponGroupDto;
+import com.fuint.common.param.CouponGroupPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtCouponGroup;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 
 /**
@@ -23,48 +22,51 @@ public interface CouponGroupService extends IService<MtCouponGroup> {
     /**
      * 分页查询分组列表
      *
-     * @param paginationRequest
+     * @param couponGroupPage
      * @return
      */
-    PaginationResponse<MtCouponGroup> queryCouponGroupListByPagination(PaginationRequest paginationRequest);
+    PaginationResponse<MtCouponGroup> queryCouponGroupListByPagination(CouponGroupPage couponGroupPage);
 
     /**
      * 添加卡券分组
      *
      * @param reqCouponGroupDto
-     * @throws BusinessCheckException
+     * @return
      */
-    MtCouponGroup addCouponGroup(ReqCouponGroupDto reqCouponGroupDto) throws BusinessCheckException;
+    MtCouponGroup addCouponGroup(ReqCouponGroupDto reqCouponGroupDto);
 
     /**
      * 修改卡券分组
      *
-     * @param reqCouponGroupDto
+     * @param  reqCouponGroupDto
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
+     * @return
      */
-    MtCouponGroup updateCouponGroup(ReqCouponGroupDto reqCouponGroupDto) throws BusinessCheckException;
+    MtCouponGroup updateCouponGroup(ReqCouponGroupDto reqCouponGroupDto, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据组ID获取分组信息
      *
      * @param id 分组ID
-     * @throws BusinessCheckException
+     * @return
      */
     MtCouponGroup queryCouponGroupById(Integer id);
 
     /**
-     * 根据分组ID删除分组信息
+     * 根据分组ID 删除分组信息
      *
-     * @param  id 分组ID
-     * @param  accountInfo 操作人
+     * @param id       分组ID
+     * @param accountInfo 操作人
      * @throws BusinessCheckException
+     * @return
      */
     void deleteCouponGroup(Integer id, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据分组ID 获取券种类数量
      *
-     * @param id 分组ID
+     * @param id       分组ID
      * @return
      */
     Integer getCouponNum(Integer id);
@@ -93,13 +95,5 @@ public interface CouponGroupService extends IService<MtCouponGroup> {
      * @return
      * */
     String importSendCoupon(MultipartFile file, AccountInfo accountInfo, String filePath) throws BusinessCheckException;
-
-    /**
-     * 保存文件
-     *
-     * @param file excel文件
-     * @param request 操作者
-     * */
-     String saveExcelFile(MultipartFile file, HttpServletRequest request) throws Exception;
 
 }

@@ -35,7 +35,7 @@ public interface BookService extends IService<MtBook> {
      * @throws BusinessCheckException
      * @return
      */
-    MtBook addBook(MtBook mtBook) throws BusinessCheckException;
+    MtBook addBook(BookDto bookDto) throws BusinessCheckException;
 
     /**
      * 根据ID获取预约项目信息
@@ -50,12 +50,12 @@ public interface BookService extends IService<MtBook> {
     /**
      * 更新预约项目
      *
-     * @param  mtBook 预约项目信息
+     * @param  bookDto 预约项目信息
      * @param  accountInfo 登录用户信息
      * @throws BusinessCheckException
      * @return
      * */
-    MtBook updateBook(MtBook mtBook, AccountInfo accountInfo) throws BusinessCheckException;
+    MtBook updateBook(BookDto bookDto, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 是否可预约

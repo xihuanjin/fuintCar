@@ -2,11 +2,11 @@ package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.alibaba.fastjson.JSONObject;
-import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.GroupMemberDto;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.MemberTopDto;
 import com.fuint.common.dto.UserDto;
-import com.fuint.common.param.MemberListParam;
+import com.fuint.common.param.MemberPage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtUser;
@@ -31,9 +31,10 @@ public interface MemberService extends IService<MtUser> {
      * 更新活跃时间
      *
      * @param userId 会员ID
+     * @param ip IP地址
      * @return
      * */
-    Boolean updateActiveTime(Integer userId) throws BusinessCheckException;
+    Boolean updateActiveTime(Integer userId, String ip) throws BusinessCheckException;
 
     /**
      * 获取当前操作会员信息
@@ -47,30 +48,30 @@ public interface MemberService extends IService<MtUser> {
     /**
      * 分页查询会员列表
      *
-     * @param memberListParam
+     * @param memberPage 分页参数
      * @return
      */
-    PaginationResponse<UserDto> queryMemberListByPagination(MemberListParam memberListParam);
+    PaginationResponse<UserDto> queryMemberListByPagination(MemberPage memberPage);
 
     /**
      * 添加会员
      *
-     * @param mtUser 用户信息
-     * @param shareId 分享用户ID
+     * @param  memberInfo 会员信息
+     * @param  shareId 分享用户ID
      * @throws BusinessCheckException
      * @return
      */
-    MtUser addMember(MtUser mtUser, String shareId) throws BusinessCheckException;
+    MtUser addMember(MtUser memberInfo, String shareId) throws BusinessCheckException;
 
     /**
      * 编辑会员
      *
-     * @param  mtUser 会员信息
+     * @param  reqUserDto 会员信息
      * @param  modifyPassword 修改密码
      * @throws BusinessCheckException
      * @return
      */
-    MtUser updateMember(MtUser mtUser, boolean modifyPassword) throws BusinessCheckException;
+    MtUser updateMember(MtUser reqUserDto, boolean modifyPassword) throws BusinessCheckException;
 
     /**
      * 通过手机号添加会员
@@ -78,9 +79,11 @@ public interface MemberService extends IService<MtUser> {
      * @param  merchantId 商户ID
      * @param  mobile 手机号
      * @param  shareId 分享用户ID
+     * @param  ip IP地址
+     * @throws BusinessCheckException
      * @return
      */
-    MtUser addMemberByMobile(Integer merchantId, String mobile, String shareId);
+    MtUser addMemberByMobile(Integer merchantId, String mobile, String shareId, String ip) throws BusinessCheckException;
 
     /**
      * 根据会员ID获取会员信息
@@ -104,23 +107,23 @@ public interface MemberService extends IService<MtUser> {
      *
      * @param  merchantId 商户ID
      * @param  openId 微信openId
+     * @throws BusinessCheckException
      * @return
      */
-    MtUser queryMemberByOpenId(Integer merchantId, String openId, JSONObject userInfo);
+    MtUser queryMemberByOpenId(Integer merchantId, String openId, JSONObject userInfo) throws BusinessCheckException;
 
     /**
      * 根据会员组ID获取会员组信息
      *
      * @param  id 会员组ID
-     * @throws BusinessCheckException
      * @return
      */
-    MtUserGrade queryMemberGradeByGradeId(Integer id) throws BusinessCheckException;
+    MtUserGrade queryMemberGradeByGradeId(Integer id);
 
     /**
      * 根据会员手机获取会员信息
      *
-     * @param  merchantId 商户ID
+     * @param merchantId 商户ID
      * @param  mobile 会员手机
      * @return
      */
@@ -139,11 +142,11 @@ public interface MemberService extends IService<MtUser> {
      * 根据会员ID删除会员信息
      *
      * @param  id 会员ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
-    Integer deleteMember(Integer id, String operator) throws BusinessCheckException;
+    Integer deleteMember(Integer id, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 根据条件搜索会员分组
@@ -158,10 +161,9 @@ public interface MemberService extends IService<MtUser> {
      *
      * @param merchantId 商户ID
      * @param storeId 店铺ID
-     * @throws BusinessCheckException
      * @return
      * */
-    Long getUserCount(Integer merchantId, Integer storeId) throws BusinessCheckException;
+    Long getUserCount(Integer merchantId, Integer storeId);
 
     /**
      * 获取会员数量
@@ -170,21 +172,20 @@ public interface MemberService extends IService<MtUser> {
      * @param storeId 店铺ID
      * @param beginTime 开始时间
      * @param endTime 结束时间
-     * @throws BusinessCheckException
      * @return
      * */
-    Long getUserCount(Integer merchantId, Integer storeId, Date beginTime, Date endTime) throws BusinessCheckException;
+    Long getUserCount(Integer merchantId, Integer storeId, Date beginTime, Date endTime);
 
     /**
      * 获取活跃会员数量
+     *
      * @param merchantId 商户ID
      * @param storeId 店铺ID
      * @param beginTime 开始时间
      * @param endTime 结束时间
-     * @throws BusinessCheckException
      * @return
      * */
-    Long getActiveUserCount(Integer merchantId, Integer storeId, Date beginTime, Date endTime) throws BusinessCheckException;
+    Long getActiveUserCount(Integer merchantId, Integer storeId, Date beginTime, Date endTime);
 
     /**
      * 重置手机号

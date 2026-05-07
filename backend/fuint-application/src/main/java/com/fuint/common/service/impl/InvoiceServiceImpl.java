@@ -3,24 +3,25 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.param.InvoicePage;
 import com.fuint.common.param.InvoiceParam;
-import com.fuint.common.service.InvoiceService;
 import com.fuint.common.service.OrderService;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
-import com.fuint.repository.mapper.MtInvoiceMapper;
 import com.fuint.repository.model.MtInvoice;
+import com.fuint.common.service.InvoiceService;
+import com.fuint.common.enums.StatusEnum;
+import com.fuint.repository.mapper.MtInvoiceMapper;
 import com.fuint.repository.model.MtOrder;
 import com.fuint.utils.StringUtil;
-import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.github.pagehelper.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.PageImpl;
@@ -29,9 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 发票服务接口
@@ -55,40 +54,40 @@ public class InvoiceServiceImpl extends ServiceImpl<MtInvoiceMapper, MtInvoice> 
     /**
      * 分页查询数据列表
      *
-     * @param paginationRequest
+     * @param invoicePage
      * @return
      */
     @Override
-    public PaginationResponse<MtInvoice> queryInvoiceListByPagination(PaginationRequest paginationRequest) {
-        Page<MtInvoice> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<MtInvoice> queryInvoiceListByPagination(InvoicePage invoicePage) {
+        Page<MtInvoice> pageHelper = PageHelper.startPage(invoicePage.getPage(), invoicePage.getPageSize());
         LambdaQueryWrapper<MtInvoice> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtInvoice::getStatus, StatusEnum.DISABLE.getKey());
 
-        String mobile = paginationRequest.getSearchParams().get("mobile") == null ? "" : paginationRequest.getSearchParams().get("mobile").toString();
+        String mobile = invoicePage.getMobile();
         if (StringUtils.isNotBlank(mobile)) {
             lambdaQueryWrapper.like(MtInvoice::getMobile, mobile);
         }
-        String orderSn = paginationRequest.getSearchParams().get("orderSn") == null ? "" : paginationRequest.getSearchParams().get("orderSn").toString();
+        String orderSn = invoicePage.getOrderSn();
         if (StringUtils.isNotBlank(orderSn)) {
             lambdaQueryWrapper.like(MtInvoice::getOrderSn, orderSn);
         }
-        String title = paginationRequest.getSearchParams().get("title") == null ? "" : paginationRequest.getSearchParams().get("title").toString();
+        String title = invoicePage.getTitle();
         if (StringUtils.isNotBlank(title)) {
             lambdaQueryWrapper.like(MtInvoice::getTitle, title);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = invoicePage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtInvoice::getStatus, status);
         }
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = invoicePage.getMerchantId();
+        if (merchantId != null) {
             lambdaQueryWrapper.eq(MtInvoice::getMerchantId, merchantId);
         }
 
         lambdaQueryWrapper.orderByAsc(MtInvoice::getId);
         List<MtInvoice> dataList = mtInvoiceMapper.selectList(lambdaQueryWrapper);
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(invoicePage.getPage(), invoicePage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<MtInvoice> paginationResponse = new PaginationResponse(pageImpl, MtInvoice.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -152,20 +151,23 @@ public class InvoiceServiceImpl extends ServiceImpl<MtInvoiceMapper, MtInvoice> 
      * 根据ID删除发票
      *
      * @param id 发票ID
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "删除发票")
-    public void deleteInvoice(Integer id, String operator) {
+    public void deleteInvoice(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
         MtInvoice mtInvoice = queryInvoiceById(id);
         if (null == mtInvoice) {
-            return;
+            throw new BusinessCheckException("该发票不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtInvoice.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
         mtInvoice.setStatus(StatusEnum.DISABLE.getKey());
         mtInvoice.setUpdateTime(new Date());
-        mtInvoice.setOperator(operator);
+        mtInvoice.setOperator(accountInfo.getAccountName());
         mtInvoiceMapper.updateById(mtInvoice);
         logger.info("删除发票信息");
     }

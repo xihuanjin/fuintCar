@@ -3,6 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.UserGradeCatchTypeEnum;
 import com.fuint.common.service.UserGradeService;
@@ -106,6 +107,12 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
         if (mtUserGrade.getDiscount() != null && (mtUserGrade.getDiscount() > 10 || mtUserGrade.getDiscount() < 0)) {
             throw new BusinessCheckException("会员折扣需在0和10之间");
         }
+        if (mtUserGrade.getRebate() != null && (mtUserGrade.getRebate() > 10 || mtUserGrade.getRebate() < 0)) {
+            throw new BusinessCheckException("返利比例需在0和10之间");
+        }
+        if (mtUserGrade.getStatus() == null) {
+            mtUserGrade.setStatus(StatusEnum.ENABLED.getKey());
+        }
         mtUserGradeMapper.insert(mtUserGrade);
         return mtUserGrade;
     }
@@ -146,6 +153,9 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
         if (mtUserGrade.getDiscount() != null && (mtUserGrade.getDiscount() > 10 || mtUserGrade.getDiscount() < 0)) {
             throw new BusinessCheckException("会员折扣需在0和10之间");
         }
+        if (mtUserGrade.getRebate() != null && (mtUserGrade.getRebate() > 10 || mtUserGrade.getRebate() < 0)) {
+            throw new BusinessCheckException("返利比例需在0和10之间");
+        }
         if (mtUserGrade.getGrade() != null && (mtUserGrade.getGrade() <= 0)) {
             throw new BusinessCheckException("会员等级需大于0");
         }
@@ -161,16 +171,19 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
      * 根据ID删除会员等级
      *
      * @param id ID
-     * @param operator 操作人
+     * @param accountInfo 操作人
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "删除会员等级")
-    public Integer deleteUserGrade(Integer id, String operator) {
+    public Integer deleteUserGrade(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
         MtUserGrade mtUserGrade = queryUserGradeById(0, id, 0);
         if (null == mtUserGrade) {
             return 0;
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtUserGrade.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，没有操作权限");
         }
         mtUserGrade.setStatus(StatusEnum.DISABLE.getKey());
         mtUserGradeMapper.updateById(mtUserGrade);
@@ -242,7 +255,7 @@ public class UserGradeServiceImpl extends ServiceImpl<MtUserGradeMapper, MtUserG
                 }
             } else {
                 for (MtUserGrade grade : userGrades) {
-                    dataList.add(grade);
+                     dataList.add(grade);
                 }
             }
         }

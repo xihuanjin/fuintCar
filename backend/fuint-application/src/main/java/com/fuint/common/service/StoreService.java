@@ -83,7 +83,16 @@ public interface StoreService extends IService<MtStore> {
      * @param params 查询参数
      * @return
      * */
-    List<MtStore> queryStoresByParams(Map<String, Object> params) throws BusinessCheckException;
+    List<MtStore> queryStoresByParams(Map<String, Object> params);
+
+    /**
+     * 根据ID获取店铺列表
+     *
+     * @param merchantId 商户ID
+     * @param storeIds 店铺ID列表
+     * @return
+     * */
+    List<MtStore> getStoreListByIds(Integer merchantId, List<Integer> storeIds);
 
     /**
      * 获取我的店铺列表
@@ -93,7 +102,7 @@ public interface StoreService extends IService<MtStore> {
      * @param status 状态
      * @return
      * */
-    List<MtStore> getMyStoreList(Integer merchantId, Integer storeId, String status) throws BusinessCheckException;
+    List<MtStore> getMyStoreList(Integer merchantId, Integer storeId, String status);
 
     /**
      * 根据距离远近查找店铺
@@ -104,7 +113,7 @@ public interface StoreService extends IService<MtStore> {
      * @param longitude 经度
      * @return
      * */
-    List<StoreInfo> queryByDistance(String merchantNo, String keyword, String latitude, String longitude) throws BusinessCheckException;
+    List<StoreInfo> queryByDistance(String merchantNo, String keyword, String latitude, String longitude);
 
     /**
      * 获取店铺名称

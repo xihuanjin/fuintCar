@@ -5,6 +5,7 @@ import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.MemberGroupDto;
 import com.fuint.common.dto.UserGroupDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.MemberGroupPage;
 import com.fuint.common.service.MemberGroupService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -53,32 +54,16 @@ public class BackendMemberGroupController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('member:group:index')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? 1 : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String name = request.getParameter("name") == null ? "" : request.getParameter("name");
-        String id = request.getParameter("id") == null ? "" : request.getParameter("id");
-        String status = request.getParameter("status") == null ? StatusEnum.ENABLED.getKey() : request.getParameter("status");
-
+    public ResponseObject list(@ModelAttribute MemberGroupPage memberGroupPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Map<String, Object> searchParams = new HashMap<>();
-        if (StringUtil.isNotEmpty(name)) {
-            searchParams.put("name", name);
-        }
-        if (StringUtil.isNotEmpty(id)) {
-            searchParams.put("id", id);
-        }
-        if (StringUtil.isNotEmpty(status)) {
-            searchParams.put("status", status);
-        }
+
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            searchParams.put("merchantId", accountInfo.getMerchantId());
+            memberGroupPage.setMerchantId(accountInfo.getMerchantId());
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
-            searchParams.put("storeId", accountInfo.getStoreId());
+            memberGroupPage.setStoreId(accountInfo.getStoreId());
         }
-
-        PaginationResponse<UserGroupDto> paginationResponse = memberGroupService.queryMemberGroupListByPagination(new PaginationRequest(page, pageSize, searchParams));
+        PaginationResponse<UserGroupDto> paginationResponse = memberGroupService.queryMemberGroupListByPagination(memberGroupPage);
 
         Map<String, Object> result = new HashMap<>();
         result.put("paginationResponse", paginationResponse);
@@ -104,7 +89,7 @@ public class BackendMemberGroupController extends BaseController {
         memberGroupDto.setStoreId(accountInfo.getStoreId());
         memberGroupDto.setOperator(accountInfo.getAccountName());
         if (memberGroupDto.getId() != null && memberGroupDto.getId() > 0) {
-            memberGroupService.updateMemberGroup(memberGroupDto);
+            memberGroupService.updateMemberGroup(memberGroupDto, accountInfo);
         } else {
             memberGroupService.addMemberGroup(memberGroupDto);
         }
@@ -130,7 +115,7 @@ public class BackendMemberGroupController extends BaseController {
             return getFailureResult(201, "该分组下有会员，不能删除");
         }
 
-        memberGroupService.deleteMemberGroup(id, accountInfo.getAccountName());
+        memberGroupService.deleteMemberGroup(id, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -152,7 +137,7 @@ public class BackendMemberGroupController extends BaseController {
         groupDto.setOperator(accountInfo.getAccountName());
         groupDto.setId(id);
         groupDto.setStatus(status);
-        memberGroupService.updateMemberGroup(groupDto);
+        memberGroupService.updateMemberGroup(groupDto, accountInfo);
 
         return getSuccessResult(true);
     }

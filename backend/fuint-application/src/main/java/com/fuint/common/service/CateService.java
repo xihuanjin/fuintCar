@@ -7,6 +7,7 @@ import com.fuint.common.param.GoodsCatePage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtGoodsCate;
+
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public interface CateService extends IService<MtGoodsCate> {
      * @param catePage
      * @return
      */
-    PaginationResponse<GoodsCateDto> queryCateListByPagination(GoodsCatePage catePage) throws BusinessCheckException;
+    PaginationResponse<GoodsCateDto> queryCateListByPagination(GoodsCatePage catePage);
 
     /**
      * 添加商品分类
@@ -38,28 +39,28 @@ public interface CateService extends IService<MtGoodsCate> {
      * 根据ID获取商品分类信息
      *
      * @param  id ID
-     * @throws BusinessCheckException
+     * @return
      */
-    MtGoodsCate queryCateById(Integer id) throws BusinessCheckException;
+    MtGoodsCate queryCateById(Integer id);
 
     /**
      * 根据ID删除
      *
      * @param  id 分类ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
-    void deleteCate(Integer id, String operator) throws BusinessCheckException;
+    void deleteCate(Integer id, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 更新分类
-     * @param  reqDto 分类参数
-     * @param  accountInfo 登录用户信息
+     * @param  mtGoodsCate 分类参数
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      * */
-    MtGoodsCate updateCate(MtGoodsCate reqDto, AccountInfo accountInfo) throws BusinessCheckException;
+    MtGoodsCate updateCate(MtGoodsCate mtGoodsCate, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 获取分类列表
@@ -70,7 +71,7 @@ public interface CateService extends IService<MtGoodsCate> {
      * @param status 状态
      * @return
      * */
-    List<MtGoodsCate> getCateList(Integer merchantId, Integer storeId, String name, String status) throws BusinessCheckException;
+    List<MtGoodsCate> getCateList(Integer merchantId, Integer storeId, String name, String status);
 
     /**
      * 获取分类ID

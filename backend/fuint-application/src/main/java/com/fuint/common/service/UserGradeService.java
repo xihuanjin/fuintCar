@@ -1,11 +1,13 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.model.MtUser;
 import com.fuint.repository.model.MtUserGrade;
+
 import java.util.List;
 
 /**
@@ -22,7 +24,7 @@ public interface UserGradeService extends IService<MtUserGrade> {
      * @param paginationRequest
      * @return
      */
-    PaginationResponse<MtUserGrade> queryUserGradeListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<MtUserGrade> queryUserGradeListByPagination(PaginationRequest paginationRequest);
 
     /**
      * 添加会员等级
@@ -56,11 +58,10 @@ public interface UserGradeService extends IService<MtUserGrade> {
      * 根据ID删除会员等级
      *
      * @param  id      ID
-     * @param  operator 操作人
-     * @throws BusinessCheckException
+     * @param  accountInfo 操作人
      * @return
      */
-    Integer deleteUserGrade(Integer id, String operator) throws BusinessCheckException;
+    Integer deleteUserGrade(Integer id, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 获取默认的会员等级
@@ -75,17 +76,17 @@ public interface UserGradeService extends IService<MtUserGrade> {
      *
      * @param  merchantId
      * @param  userInfo
-     * @throws BusinessCheckException
      * @return
      * */
-    List<MtUserGrade> getPayUserGradeList(Integer merchantId, MtUser userInfo) throws BusinessCheckException;
+    List<MtUserGrade> getPayUserGradeList(Integer merchantId, MtUser userInfo);
 
     /**
      * 获取商户会员等级列表
      *
-     * @param  merchantId
+     * @param  merchantId 商户ID
      * @param status 状态
      * @return
      * */
     List<MtUserGrade> getMerchantGradeList(Integer merchantId, String status);
+
 }

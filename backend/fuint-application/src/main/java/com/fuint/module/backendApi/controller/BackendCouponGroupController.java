@@ -6,12 +6,14 @@ import com.fuint.common.dto.GroupDataDto;
 import com.fuint.common.dto.GroupDataListDto;
 import com.fuint.common.dto.ReqCouponGroupDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.CouponGroupPage;
+import com.fuint.common.param.StatusParam;
 import com.fuint.common.service.CouponGroupService;
+import com.fuint.common.service.UploadService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.common.util.XlsUtil;
 import com.fuint.framework.dto.ExcelExportDto;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.service.ExportService;
 import com.fuint.framework.web.BaseController;
@@ -19,7 +21,6 @@ import com.fuint.framework.web.ResponseObject;
 import com.fuint.repository.mapper.MtCouponMapper;
 import com.fuint.repository.model.MtCoupon;
 import com.fuint.repository.model.MtCouponGroup;
-import com.fuint.utils.StringUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
@@ -66,39 +67,28 @@ public class BackendCouponGroupController extends BaseController {
     private ExportService exportService;
 
     /**
+     * 上传文件服务接口
+     * */
+    private UploadService uploadService;
+
+    /**
      * 查询卡券分组列表
      */
     @ApiOperation(value = "查询卡券分组列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:group:index')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? 1 : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String name = request.getParameter("name") == null ? "" : request.getParameter("name");
-        String id = request.getParameter("id") == null ? "" : request.getParameter("id");
-        String status = request.getParameter("status") == null ? StatusEnum.ENABLED.getKey() : request.getParameter("status");
-
+    public ResponseObject list(@ModelAttribute CouponGroupPage couponGroupPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
-        Map<String, Object> searchParams = new HashMap<>();
-        if (StringUtil.isNotEmpty(name)) {
-            searchParams.put("name", name);
-        }
-        if (StringUtil.isNotEmpty(id)) {
-            searchParams.put("id", id);
-        }
-        if (StringUtil.isNotEmpty(status)) {
-            searchParams.put("status", status);
-        }
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            searchParams.put("merchantId", accountInfo.getMerchantId());
+            couponGroupPage.setMerchantId(accountInfo.getMerchantId());
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
-            searchParams.put("storeId", accountInfo.getStoreId());
+            couponGroupPage.setStoreId(accountInfo.getStoreId());
         }
 
-        PaginationResponse<MtCouponGroup> paginationResponse = couponGroupService.queryCouponGroupListByPagination(new PaginationRequest(page, pageSize, searchParams));
+        PaginationResponse<MtCouponGroup> paginationResponse = couponGroupService.queryCouponGroupListByPagination(couponGroupPage);
 
         // 计算券种类、总价值
         if (paginationResponse.getContent().size() > 0) {
@@ -114,19 +104,19 @@ public class BackendCouponGroupController extends BaseController {
 
         if (paginationResponse.getContent().size() > 0) {
             for (int i = 0; i < paginationResponse.getContent().size(); i++) {
-                 Integer groupId = paginationResponse.getContent().get(i).getId();
-                 GroupDataDto data = new GroupDataDto();
-                 data.setCancelNum(0);
-                 data.setExpireNum(0);
-                 data.setUseNum(0);
-                 data.setSendNum(0);
-                 data.setUnSendNum(0);
-                 GroupDataListDto item = new GroupDataListDto();
-                 if (null != data) {
-                     item.setKey(groupId.toString());
-                     item.setData(data);
-                     groupData.add(item);
-                 }
+                Integer groupId = paginationResponse.getContent().get(i).getId();
+                GroupDataDto data = new GroupDataDto();
+                data.setCancelNum(0);
+                data.setExpireNum(0);
+                data.setUseNum(0);
+                data.setSendNum(0);
+                data.setUnSendNum(0);
+                GroupDataListDto item = new GroupDataListDto();
+                if (null != data) {
+                    item.setKey(groupId.toString());
+                    item.setData(data);
+                    groupData.add(item);
+                }
             }
         }
 
@@ -150,7 +140,7 @@ public class BackendCouponGroupController extends BaseController {
         reqCouponGroupDto.setStoreId(accountInfo.getStoreId());
         reqCouponGroupDto.setOperator(accountInfo.getAccountName());
         if (reqCouponGroupDto.getId() != null && reqCouponGroupDto.getId() > 0) {
-            couponGroupService.updateCouponGroup(reqCouponGroupDto);
+            couponGroupService.updateCouponGroup(reqCouponGroupDto, accountInfo);
         } else {
             couponGroupService.addCouponGroup(reqCouponGroupDto);
         }
@@ -188,19 +178,16 @@ public class BackendCouponGroupController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:group:edit')")
-    public ResponseObject updateStatus(@RequestBody Map<String, Object> params) throws BusinessCheckException {
-        String status = params.get("status") != null ? params.get("status").toString() : StatusEnum.ENABLED.getKey();
-        Integer id = params.get("id") == null ? 0 : Integer.parseInt(params.get("id").toString());
-
+    public ResponseObject updateStatus(@RequestBody StatusParam params) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-
-        String operator = accountInfo.getAccountName();
+        if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
+            getFailureResult(5002);
+        }
         ReqCouponGroupDto groupDto = new ReqCouponGroupDto();
-        groupDto.setOperator(operator);
-        groupDto.setId(id);
-        groupDto.setStatus(status);
-        couponGroupService.updateCouponGroup(groupDto);
-
+        groupDto.setOperator(accountInfo.getAccountName());
+        groupDto.setId(params.getId());
+        groupDto.setStatus(params.getStatus());
+        couponGroupService.updateCouponGroup(groupDto, accountInfo);
         return getSuccessResult(true);
     }
 
@@ -212,10 +199,10 @@ public class BackendCouponGroupController extends BaseController {
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('coupon:group:index')")
     public ResponseObject info(@PathVariable("id") Integer groupId) throws BusinessCheckException {
-        MtCouponGroup mtCouponGroup = couponGroupService.queryCouponGroupById(groupId);
+        MtCouponGroup groupInfo = couponGroupService.queryCouponGroupById(groupId);
 
         Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("groupInfo", mtCouponGroup);
+        resultMap.put("groupInfo", groupInfo);
 
         return getSuccessResult(resultMap);
     }
@@ -255,8 +242,7 @@ public class BackendCouponGroupController extends BaseController {
     @CrossOrigin
     public ResponseObject uploadFile(HttpServletRequest request, @RequestParam("fileInput") MultipartFile file) throws Exception {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-
-        String filePath = couponGroupService.saveExcelFile(file, request);
+        String filePath = uploadService.saveUploadFile(request, file);
         String uuid = couponGroupService.importSendCoupon(file, accountInfo, filePath);
         return getSuccessResult(uuid);
     }
@@ -270,15 +256,17 @@ public class BackendCouponGroupController extends BaseController {
     public ResponseObject quickSearch() {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
-        Map<String, Object> param = new HashMap<>();
-        param.put("status", StatusEnum.ENABLED.getKey());
+        CouponGroupPage couponGroupPage = new CouponGroupPage();
+        couponGroupPage.setPage(Constants.PAGE_NUMBER);
+        couponGroupPage.setPageSize(Constants.ALL_ROWS);
+        couponGroupPage.setStatus(StatusEnum.ENABLED.getKey());
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            param.put("merchantId", accountInfo.getMerchantId());
+            couponGroupPage.setMerchantId(accountInfo.getMerchantId());
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
-            param.put("storeId", accountInfo.getStoreId());
+            couponGroupPage.setStoreId(accountInfo.getStoreId());
         }
-        PaginationResponse<MtCouponGroup> paginationResponse = couponGroupService.queryCouponGroupListByPagination(new PaginationRequest(Constants.PAGE_NUMBER, Constants.ALL_ROWS, param));
+        PaginationResponse<MtCouponGroup> paginationResponse = couponGroupService.queryCouponGroupListByPagination(couponGroupPage);
 
         List<MtCouponGroup> groupList = paginationResponse.getContent();
 

@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.BookDto;
+import com.fuint.common.dto.BookDto;
 import com.fuint.common.dto.DayDto;
 import com.fuint.common.dto.TimeDto;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BookPage;
 import com.fuint.common.param.BookableParam;
@@ -108,10 +110,10 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
         String baseImage = settingService.getUploadBasePath();
         if (bookList != null && bookList.size() > 0) {
             for (MtBook mtBook : bookList) {
-                BookDto bookDto = new BookDto();
-                BeanUtils.copyProperties(mtBook, bookDto);
-                bookDto.setLogo(baseImage + mtBook.getLogo());
-                dataList.add(bookDto);
+                 BookDto bookDto = new BookDto();
+                 BeanUtils.copyProperties(mtBook, bookDto);
+                 bookDto.setLogo(baseImage + mtBook.getLogo());
+                 dataList.add(bookDto);
             }
         }
 
@@ -128,12 +130,15 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
     /**
      * 添加预约项目
      *
-     * @param mtBook 预约信息
+     * @param bookDto 预约信息
+     * @throws BusinessCheckException
      * @return
      */
     @Override
     @OperationServiceLog(description = "添加预约项目")
-    public MtBook addBook(MtBook mtBook) throws BusinessCheckException {
+    public MtBook addBook(BookDto bookDto) throws BusinessCheckException {
+        MtBook mtBook = new MtBook();
+        BeanUtils.copyProperties(bookDto, mtBook);
         Integer storeId = mtBook.getStoreId() == null ? 0 : mtBook.getStoreId();
         if (mtBook.getMerchantId() == null || mtBook.getMerchantId() <= 0) {
             MtStore mtStore = storeService.queryStoreById(storeId);
@@ -248,60 +253,61 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
     /**
      * 修改预约项目
      *
-     * @param  mtBook
+     * @param  bookDto
+     * @param  accountInfo
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @OperationServiceLog(description = "修改预约项目")
-    public MtBook updateBook(MtBook mtBook, AccountInfo accountInfo) throws BusinessCheckException {
-        MtBook book = mtBookMapper.selectById(mtBook.getId());
-        if (book == null) {
+    public MtBook updateBook(BookDto bookDto, AccountInfo accountInfo) throws BusinessCheckException {
+        MtBook mtBook = mtBookMapper.selectById(bookDto.getId());
+        if (mtBook == null) {
             throw new BusinessCheckException("该预约项目状态异常");
         }
-        if (accountInfo.getMerchantId() > 0 && !book.getMerchantId().equals(accountInfo.getMerchantId())) {
-            throw new BusinessCheckException("不同商户，没有操作权限");
+        if (!mtBook.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
         }
-        if (mtBook.getLogo() != null) {
-            book.setLogo(mtBook.getLogo());
+        if (bookDto.getLogo() != null) {
+            mtBook.setLogo(bookDto.getLogo());
         }
-        if (mtBook.getCateId() != null) {
-            book.setCateId(mtBook.getCateId());
+        if (bookDto.getCateId() != null) {
+            mtBook.setCateId(bookDto.getCateId());
         }
-        if (book.getName() != null) {
-            book.setName(mtBook.getName());
+        if (bookDto.getName() != null) {
+            mtBook.setName(bookDto.getName());
         }
-        if (mtBook.getStoreId() != null) {
-            book.setStoreId(mtBook.getStoreId());
+        if (bookDto.getStoreId() != null) {
+            mtBook.setStoreId(bookDto.getStoreId());
         }
-        if (mtBook.getDescription() != null) {
-            book.setDescription(mtBook.getDescription());
+        if (bookDto.getDescription() != null) {
+            mtBook.setDescription(bookDto.getDescription());
         }
-        if (mtBook.getOperator() != null) {
-            book.setOperator(mtBook.getOperator());
+        if (bookDto.getOperator() != null) {
+            mtBook.setOperator(bookDto.getOperator());
         }
-        if (mtBook.getStatus() != null) {
-            book.setStatus(mtBook.getStatus());
+        if (bookDto.getStatus() != null) {
+            mtBook.setStatus(bookDto.getStatus());
         }
-        if (mtBook.getGoodsId() != null) {
-            book.setGoodsId(mtBook.getGoodsId());
+        if (bookDto.getGoodsId() != null) {
+            mtBook.setGoodsId(bookDto.getGoodsId());
         }
-        if (mtBook.getSort() != null) {
-            book.setSort(mtBook.getSort());
+        if (bookDto.getSort() != null) {
+            mtBook.setSort(bookDto.getSort());
         }
-        if (mtBook.getServiceDates() != null) {
-            book.setServiceDates(mtBook.getServiceDates());
+        if (bookDto.getServiceDates() != null) {
+            mtBook.setServiceDates(bookDto.getServiceDates());
         }
-        if (mtBook.getServiceTimes() != null) {
-            book.setServiceTimes(mtBook.getServiceTimes());
+        if (bookDto.getServiceTimes() != null) {
+            mtBook.setServiceTimes(bookDto.getServiceTimes());
         }
-        if (mtBook.getServiceStaffIds() != null) {
-            book.setServiceStaffIds(mtBook.getServiceStaffIds());
+        if (bookDto.getServiceStaffIds() != null) {
+            mtBook.setServiceStaffIds(bookDto.getServiceStaffIds());
         }
-        book.setUpdateTime(new Date());
-        mtBookMapper.updateById(book);
-        return book;
+        mtBook.setUpdateTime(new Date());
+        mtBookMapper.updateById(mtBook);
+        return mtBook;
     }
 
     /**
@@ -346,19 +352,19 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
                }
            }
        }
-        Date now = new Date();
-        if (bookNum < limit) {
-            if (StringUtil.isNotEmpty(param.getTime())) {
-                String[] arr = param.getTime().split("-");
-                String dateTime = param.getDate() + " " + arr[1]+":00";
-                Date currentDate = DateUtil.parseDate(dateTime);
-                if (now.compareTo(currentDate) < 0) {
-                    result.add(param.getTime());
-                }
-            } else {
-                String[] times = mtBook.getServiceTimes().split(",");
-                if (times.length > 0) {
-                    for (String str : times) {
+       Date now = new Date();
+       if (bookNum < limit) {
+           if (StringUtil.isNotEmpty(param.getTime())) {
+               String[] arr = param.getTime().split("-");
+               String dateTime = param.getDate() + " " + arr[1]+":00";
+               Date currentDate = DateUtil.parseDate(dateTime);
+               if (now.compareTo(currentDate) < 0) {
+                   result.add(param.getTime());
+               }
+           } else {
+               String[] times = mtBook.getServiceTimes().split(",");
+               if (times.length > 0) {
+                   for (String str : times) {
                         String[] arr = str.split("-");
                         if (arr.length > 2) {
                             String item = arr[0] + "-" + arr[1];
@@ -368,10 +374,10 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
                                 result.add(item);
                             }
                         }
-                    }
-                }
-            }
-        }
+                   }
+               }
+           }
+       }
        return result;
     }
 
@@ -398,7 +404,7 @@ public class BookServiceImpl extends ServiceImpl<MtBookMapper, MtBook> implement
 
         if (dataList.size() > 0) {
             for (MtBook book : dataList) {
-                 book.setLogo(baseImage + book.getLogo());
+                book.setLogo(baseImage + book.getLogo());
             }
         }
 

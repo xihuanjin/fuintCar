@@ -6,10 +6,10 @@ import com.fuint.common.dto.MerchantDto;
 import com.fuint.common.dto.MerchantSettingDto;
 import com.fuint.common.param.MerchantPage;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.module.merchantApi.request.MerchantSettingParam;
 import com.fuint.repository.model.MtMerchant;
+
 import java.util.List;
 import java.util.Map;
 

@@ -8,6 +8,7 @@ import com.fuint.common.enums.MemberSourceEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.*;
+import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.BaseController;
@@ -275,6 +276,7 @@ public class ClientSignController extends BaseController {
         String captchaCode = param.get("captchaCode") == null ? "" : param.get("captchaCode").toString();
         String uuid = param.get("uuid") == null ? "" : param.get("uuid").toString();
         String shareId = param.get("shareId") == null ? "0" : param.get("shareId").toString();
+        String ip = CommonUtil.getIPFromHttpRequest(request);
         TokenDto dto = new TokenDto();
         MtUser mtUser = null;
         Integer merchantId = merchantService.getMerchantId(merchantNo);
@@ -299,7 +301,7 @@ public class ClientSignController extends BaseController {
             // 2、写入token redis session
             if (mtVerifyCode != null) {
                 if (null == mtUser) {
-                    memberService.addMemberByMobile(merchantId, mobile, shareId);
+                    memberService.addMemberByMobile(merchantId, mobile, shareId, ip);
                     mtUser = memberService.queryMemberByMobile(merchantId, mobile);
                 }
 
