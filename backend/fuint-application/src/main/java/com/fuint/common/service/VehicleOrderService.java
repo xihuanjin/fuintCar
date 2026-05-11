@@ -2,6 +2,7 @@ package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fuint.common.dto.VehicleOrderDto;
+import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
@@ -15,7 +16,7 @@ public interface VehicleOrderService extends IService<MtVehicleOrder> {
 
     MtVehicleOrder submitVehicleOrder(MtVehicleOrder mtVehicleOrder) throws BusinessCheckException;
 
-    PaginationResponse<VehicleOrderDto> getVehicleOrderListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException;
+    PaginationResponse<VehicleOrderDto> getVehicleOrderListByPagination(VehicleOrderPage vehicleOrderPage);
 
     MtVehicleOrder getVehicleOrderById(Integer id);
 

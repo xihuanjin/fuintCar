@@ -1,16 +1,15 @@
 package com.fuint.module.backendApi.controller;
 
-import com.fuint.common.Constants;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.ParamDto;
 import com.fuint.common.dto.VehicleOrderDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.VehicleOrderStatusEnum;
+import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.common.service.StoreService;
 import com.fuint.common.service.VehicleOrderService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -21,7 +20,6 @@ import io.swagger.annotations.ApiOperation;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,33 +43,16 @@ public class BackendVehicleOrderController extends BaseController {
     @ApiOperation(value="车辆服务单列表", notes="查询车辆服务单列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-
-        String userId = request.getParameter("userId");
-        String vehiclePlateNo = request.getParameter("vehiclePlateNo");
-        String status = request.getParameter("status");
-        String orderSn = request.getParameter("orderSn");
-        String userNo = request.getParameter("userNo");
-        String mobile = request.getParameter("mobile");
-        String storeIds = request.getParameter("storeIds");
-        String startTime = request.getParameter("startTime");
-        String endTime = request.getParameter("endTime");
-
+    public ResponseObject list(@ModelAttribute VehicleOrderPage vehicleOrderPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Map<String, Object> params = new HashMap<>();
-        params.put("userId", userId);
-        params.put("vehiclePlateNo", vehiclePlateNo);
-        params.put("orderSn", orderSn);
-        params.put("userNo", userNo);
-        params.put("status", status);
-        params.put("mobile", mobile);
-        params.put("storeIds", storeIds);
-        params.put("startTime", startTime);
-        params.put("endTime", endTime);
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            vehicleOrderPage.setMerchantId(accountInfo.getMerchantId());
+        }
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            vehicleOrderPage.setStoreId(accountInfo.getStoreId());
+        }
 
-        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(new PaginationRequest(page, pageSize, params));
+        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(vehicleOrderPage);
 
         // 店铺列表
         List<MtStore> storeList = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
@@ -138,7 +119,7 @@ public class BackendVehicleOrderController extends BaseController {
         }
 
         if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
-            return getFailureResult(201, "您没有操作权限");
+            return getFailureResult(201, "不同商户，没有操作权限");
         }
         mtVehicleOrder.setOperator(accountInfo.getAccountName());
         mtVehicleOrder.setStatus(status);
@@ -154,7 +135,7 @@ public class BackendVehicleOrderController extends BaseController {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         MtVehicleOrder mtVehicleOrder = vehicleOrderService.getVehicleOrderById(id);
         if (!accountInfo.getMerchantId().equals(mtVehicleOrder.getMerchantId())) {
-            return getFailureResult(201, "您没有操作权限");
+            return getFailureResult(201, "不同商户，没有操作权限");
         }
         vehicleOrderService.deleteVehicleOrder(id, accountInfo.getAccountName());
         return getSuccessResult(true);

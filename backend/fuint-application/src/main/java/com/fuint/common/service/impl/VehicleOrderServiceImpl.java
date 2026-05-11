@@ -6,14 +6,17 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fuint.common.dto.VehicleDto;
 import com.fuint.common.dto.VehicleOrderDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.common.service.*;
+import com.fuint.common.util.CommonUtil;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.MtVehicleOrderMapper;
-import com.fuint.repository.model.*;
-import com.fuint.common.util.CommonUtil;
+import com.fuint.repository.model.MtStore;
+import com.fuint.repository.model.MtUser;
+import com.fuint.repository.model.MtUserCoupon;
+import com.fuint.repository.model.MtVehicleOrder;
 import com.fuint.utils.StringUtil;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -26,6 +29,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
@@ -48,58 +52,56 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
 
     @Override
     @OperationServiceLog(description = "查询车辆服务单列表")
-    public PaginationResponse<VehicleOrderDto> getVehicleOrderListByPagination(PaginationRequest paginationRequest) throws BusinessCheckException {
-        String userId = paginationRequest.getSearchParams().get("userId") == null ? "" : paginationRequest.getSearchParams().get("userId").toString();
-        String vehiclePlateNo = paginationRequest.getSearchParams().get("vehiclePlateNo") == null ? "" : paginationRequest.getSearchParams().get("vehiclePlateNo").toString();
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
-        String orderSn = paginationRequest.getSearchParams().get("orderSn") == null ? "" : paginationRequest.getSearchParams().get("orderSn").toString();
-        String userNo = paginationRequest.getSearchParams().get("userNo") == null ? "" : paginationRequest.getSearchParams().get("userNo").toString();
-        String mobile = paginationRequest.getSearchParams().get("mobile") == null ? "" : paginationRequest.getSearchParams().get("mobile").toString();
-        String storeIds = paginationRequest.getSearchParams().get("storeIds") == null ? "" : paginationRequest.getSearchParams().get("storeIds").toString();
-        String startTime = paginationRequest.getSearchParams().get("startTime") == null ? "" : paginationRequest.getSearchParams().get("startTime").toString();
-        String endTime = paginationRequest.getSearchParams().get("endTime") == null ? "" : paginationRequest.getSearchParams().get("endTime").toString();
-
+    public PaginationResponse<VehicleOrderDto> getVehicleOrderListByPagination(VehicleOrderPage vehicleOrderPage) {
+        String userNo = vehicleOrderPage.getUserNo();
+        String mobile = vehicleOrderPage.getMobile();
+        Integer userId = vehicleOrderPage.getUserId();
         if (StringUtils.isNotEmpty(userNo)){
             MtUser userInfo = memberService.queryMemberByUserNo(0, userNo);
             if (userInfo != null) {
-                userId = userInfo.getId() + "";
+                userId = userInfo.getId();
             } else {
-                userId = "0";
+                userId = 0;
             }
         } else if (StringUtils.isNotEmpty(mobile)) {
             MtUser userInfo = memberService.queryMemberByMobile(0, mobile);
             if (userInfo != null) {
-                userId = userInfo.getId() + "";
+                userId = userInfo.getId();
             } else {
-                userId = "0";
+                userId = 0;
             }
         }
-
-        Page<MtVehicleOrder> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
         LambdaQueryWrapper<MtVehicleOrder> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtVehicleOrder::getStatus, StatusEnum.DISABLE.getKey());
+        String orderSn = vehicleOrderPage.getOrderSn();
         if (StringUtils.isNotEmpty(orderSn)) {
             lambdaQueryWrapper.eq(MtVehicleOrder::getOrderSn, orderSn);
         }
+        String storeIds = vehicleOrderPage.getStoreIds();
         if (StringUtils.isNotEmpty(storeIds)) {
             List<String> idList = Arrays.asList(storeIds.split(","));
             lambdaQueryWrapper.in(MtVehicleOrder::getStoreId, idList);
         }
-        if (StringUtils.isNotEmpty(status)){
+        String status = vehicleOrderPage.getStatus();
+        if (StringUtils.isNotEmpty(status)) {
             lambdaQueryWrapper.eq(MtVehicleOrder::getStatus, status);
         }
-        if (StringUtils.isNotEmpty(userId)){
+        if (userId != null) {
             lambdaQueryWrapper.eq(MtVehicleOrder::getUserId, userId);
         }
-        if(StringUtils.isNotEmpty(vehiclePlateNo)){
+        String vehiclePlateNo = vehicleOrderPage.getVehiclePlateNo();
+        if (StringUtils.isNotEmpty(vehiclePlateNo)){
             lambdaQueryWrapper.eq(MtVehicleOrder::getVehiclePlateNo, vehiclePlateNo);
         }
+        String startTime = vehicleOrderPage.getStartTime();
         if (StringUtil.isNotEmpty(startTime)) {
             lambdaQueryWrapper.ge(MtVehicleOrder::getCreateTime, startTime);
         }
+        String endTime = vehicleOrderPage.getEndTime();
         if (StringUtil.isNotEmpty(endTime)) {
             lambdaQueryWrapper.le(MtVehicleOrder::getCreateTime, endTime);
         }
+        Page<MtVehicleOrder> pageHelper = PageHelper.startPage(vehicleOrderPage.getPage(), vehicleOrderPage.getPageSize());
         lambdaQueryWrapper.orderByDesc(MtVehicleOrder::getId);
         List<MtVehicleOrder> dataList = mtVehicleOrderMapper.selectList(lambdaQueryWrapper);
         List<VehicleOrderDto> vehicleOrderList = new ArrayList<>();
@@ -121,7 +123,7 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
             }
         }
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(vehicleOrderPage.getPage(), vehicleOrderPage.getPageSize());
         PageImpl<VehicleDto> pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<VehicleOrderDto> paginationResponse = new PaginationResponse(pageImpl, VehicleOrderDto.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -133,8 +135,7 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
 
     @Override
     public MtVehicleOrder getVehicleOrderById(Integer id) {
-        MtVehicleOrder mtVehicleOrder = mtVehicleOrderMapper.selectById(id);
-        return mtVehicleOrder;
+        return mtVehicleOrderMapper.selectById(id);
     }
 
     @Override
@@ -195,8 +196,7 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
         if (StringUtil.isNotEmpty(status)) {
             lambdaQueryWrapper.eq(MtVehicleOrder::getStatus, status);
         }
-        List<MtVehicleOrder> vehicleList = mtVehicleOrderMapper.selectList(lambdaQueryWrapper);
-        return vehicleList;
+        return mtVehicleOrderMapper.selectList(lambdaQueryWrapper);
     }
 
     @Override

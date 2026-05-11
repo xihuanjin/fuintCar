@@ -499,6 +499,12 @@
            "style": {
              "navigationBarTitleText": "编辑员工"
            }
+         },
+         {
+           "path": "data/index",
+           "style": {
+             "navigationBarTitleText": "统计报表"
+            }
          }]
   }],
   "preloadRule": {

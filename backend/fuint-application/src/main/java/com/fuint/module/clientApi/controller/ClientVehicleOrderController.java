@@ -2,11 +2,10 @@ package com.fuint.module.clientApi.controller;
 
 import com.fuint.common.dto.UserInfo;
 import com.fuint.common.dto.VehicleOrderDto;
-import com.fuint.common.param.OrderListParam;
+import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.common.service.VehicleOrderService;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -18,8 +17,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 服务单类controller
@@ -44,14 +41,10 @@ public class ClientVehicleOrderController extends BaseController {
     @ApiOperation(value = "获取我的服务单列表")
     @RequestMapping(value = "/list", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject list(@RequestBody OrderListParam orderListParam) throws BusinessCheckException {
+    public ResponseObject list(@RequestBody VehicleOrderPage param) throws BusinessCheckException {
         UserInfo userInfo = TokenUtil.getUserInfo();
-
-        Map<String, Object> params = new HashMap<>();
-        params.put("userId", userInfo.getId());
-        params.put("status", orderListParam.getStatus());
-
-        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(new PaginationRequest(orderListParam.getPage(), orderListParam.getPageSize(), params));
+        param.setUserId(userInfo.getId());
+        PaginationResponse<VehicleOrderDto> paginationResponse = vehicleOrderService.getVehicleOrderListByPagination(param);
         return getSuccessResult(paginationResponse);
     }
 
