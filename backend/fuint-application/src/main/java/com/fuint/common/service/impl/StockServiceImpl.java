@@ -3,6 +3,7 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.StockGoodsDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
@@ -180,20 +181,26 @@ public class StockServiceImpl extends ServiceImpl<MtStockMapper, MtStock> implem
      * 删除库存管理记录
      *
      * @param  id ID
-     * @param  operator 操作人
+     * @param  accountInfo 操作人
      * @throws BusinessCheckException
      * @return
      */
     @Override
     @OperationServiceLog(description = "删除库存管理记录")
-    public void delete(Integer id, String operator) throws BusinessCheckException {
+    public void delete(Integer id, AccountInfo accountInfo) throws BusinessCheckException {
         MtStock mtStock = mtStockMapper.selectById(id);
         if (mtStock == null) {
-            return;
+            throw new BusinessCheckException("库存管理记录不存在");
+        }
+        if (mtStock == null) {
+            throw new BusinessCheckException("库存管理记录不存在");
+        }
+        if (accountInfo.getMerchantId() > 0 && !mtStock.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无权限操作");
         }
         mtStock.setStatus(StatusEnum.DISABLE.getKey());
         mtStock.setUpdateTime(new Date());
-        mtStock.setOperator(operator);
+        mtStock.setOperator(accountInfo.getAccountName());
         this.updateById(mtStock);
     }
 

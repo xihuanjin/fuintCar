@@ -273,7 +273,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
             mtGoods = queryGoodsById(reqDto.getId());
             reqDto.setMerchantId(mtGoods.getMerchantId());
             // 添加商户权限校验
-            if (accountInfo != null && accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0 
+            if (accountInfo != null && accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0
                 && !mtGoods.getMerchantId().equals(accountInfo.getMerchantId())) {
                 throw new BusinessCheckException("不同商户，没有操作权限");
             }
@@ -667,7 +667,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * @return
      * */
     @Override
-    public Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException {
+    public Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) {
         MtStore mtStore = storeService.queryStoreById(storeId);
         if (mtStore == null) {
             Map<String, Object> result = new HashMap<>();
@@ -790,7 +790,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
      * @return
      */
     @Override
-    public PaginationResponse<GoodsDto> selectGoodsList(Map<String, Object> params) throws BusinessCheckException {
+    public PaginationResponse<GoodsDto> selectGoodsList(Map<String, Object> params) {
         Integer page = params.get("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(params.get("page").toString());
         Integer pageSize = params.get("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(params.get("pageSize").toString());
         Integer merchantId = (params.get("merchantId") == null || StringUtil.isEmpty(params.get("merchantId").toString())) ? 0 : Integer.parseInt(params.get("merchantId").toString());

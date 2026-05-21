@@ -112,7 +112,7 @@ public interface GoodsService {
      * @param pageSize 每页数量
      * @return
      * */
-    Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize) throws BusinessCheckException;
+    Map<String, Object> getStoreGoodsList(Integer storeId, String keyword, String platform, Integer cateId, Integer page, Integer pageSize);
 
     /**
      * 根据skuId获取规格列表
@@ -145,7 +145,7 @@ public interface GoodsService {
      * @param params 查询参数
      * @return
      */
-    PaginationResponse<GoodsDto> selectGoodsList(Map<String, Object> params) throws BusinessCheckException;
+    PaginationResponse<GoodsDto> selectGoodsList(Map<String, Object> params);
 
     /**
      * 获取商品销售排行榜

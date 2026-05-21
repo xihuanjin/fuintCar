@@ -5,6 +5,7 @@ import com.fuint.common.dto.AccountDto;
 import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.RoleDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.param.AccountPage;
 import com.fuint.common.service.AccountService;
 import com.fuint.common.service.DutyService;
 import com.fuint.common.service.MerchantService;
@@ -73,49 +74,15 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:index')")
-    public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
-        Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
-        Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
-        String accountName = request.getParameter("accountName") == null ? "" : request.getParameter("accountName");
-        String realName = request.getParameter("realName") == null ? "" : request.getParameter("realName");
-        String accountStatus = request.getParameter("accountStatus") == null ? "" : request.getParameter("accountStatus");
-        String merchantId = request.getParameter("merchantId") == null ? "" : request.getParameter("merchantId");
-        String storeId = request.getParameter("storeId") == null ? "" : request.getParameter("storeId");
-        String staffId = request.getParameter("staffId") == null ? "" : request.getParameter("staffId");
-
+    public ResponseObject list(@ModelAttribute AccountPage accountPage) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Map<String, Object> searchParams = new HashMap<>();
-        if (StringUtil.isNotEmpty(accountName)) {
-            searchParams.put("name", accountName);
-        }
-        if (StringUtil.isNotEmpty(realName)) {
-            searchParams.put("realName", realName);
-        }
-        if (StringUtil.isNotEmpty(accountStatus)) {
-            searchParams.put("status", accountStatus);
-        }
-        if (StringUtil.isNotEmpty(accountStatus)) {
-            searchParams.put("status", accountStatus);
-        }
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            searchParams.put("merchantId", accountInfo.getMerchantId());
-        } else {
-            if (StringUtil.isNotEmpty(merchantId)) {
-                searchParams.put("merchantId", merchantId);
-            }
+            accountPage.setMerchantId(accountInfo.getMerchantId());
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
-            searchParams.put("storeId", accountInfo.getStoreId());
-        } else {
-            if (StringUtil.isNotEmpty(storeId)) {
-                searchParams.put("storeId", storeId);
-            }
+            accountPage.setStoreId(accountInfo.getStoreId());
         }
-        if (StringUtil.isNotEmpty(staffId)) {
-            searchParams.put("staffId", staffId);
-        }
-
-        PaginationResponse<AccountDto> paginationResponse = tAccountService.getAccountListByPagination(new PaginationRequest(page, pageSize, searchParams));
+        PaginationResponse<AccountDto> paginationResponse = tAccountService.getAccountListByPagination(accountPage);
         return getSuccessResult(paginationResponse);
     }
 
@@ -133,15 +100,23 @@ public class BackendAccountController extends BaseController {
         List<RoleDto> roles = new ArrayList<>();
         if (roleList.size() > 0) {
             for (TDuty duty : roleList) {
-                 RoleDto roleDto = new RoleDto();
-                 roleDto.setId(duty.getDutyId().longValue());
-                 roleDto.setName(duty.getDutyName());
-                 roleDto.setStatus(duty.getStatus());
-                 roles.add(roleDto);
+                RoleDto roleDto = new RoleDto();
+                roleDto.setId(duty.getDutyId().longValue());
+                roleDto.setName(duty.getDutyName());
+                roleDto.setStatus(duty.getStatus());
+                roles.add(roleDto);
             }
         }
         result.put("roles", roles);
 
+        Map<String, Object> params = new HashMap<>();
+        params.put("status", StatusEnum.ENABLED.getKey());
+        if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
+            params.put("storeId", accountInfo.getStoreId());
+        }
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            params.put("merchantId", accountInfo.getMerchantId());
+        }
         List<MtStore> stores = storeService.getMyStoreList(accountInfo.getMerchantId(), accountInfo.getStoreId(), StatusEnum.ENABLED.getKey());
         result.put("stores", stores);
 
@@ -153,15 +128,24 @@ public class BackendAccountController extends BaseController {
             TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
             accountDto = new AccountDto();
             accountDto.setId(tAccount.getAcctId());
-            BeanUtils.copyProperties(tAccount, accountDto);
-            BeanUtils.copyProperties(tAccount, accountDto);
-            if (tAccount.getStoreId() != null && tAccount.getStoreId() > 0) {
+            accountDto.setAccountKey(tAccount.getAccountKey());
+            accountDto.setAccountName(tAccount.getAccountName());
+            accountDto.setAccountStatus(tAccount.getAccountStatus());
+            accountDto.setCreateDate(tAccount.getCreateDate());
+            accountDto.setRealName(tAccount.getRealName());
+            accountDto.setModifyDate(tAccount.getModifyDate());
+            accountDto.setStaffId(tAccount.getStaffId());
+            accountDto.setMerchantId(tAccount.getMerchantId());
+            if (tAccount.getStoreId() > 0) {
+                accountDto.setStoreId(tAccount.getStoreId());
+            }
+            if (tAccount.getStoreId() > 0) {
                 MtStore mtStore = storeService.queryStoreById(tAccount.getStoreId());
                 if (mtStore != null) {
                     accountDto.setStoreName(mtStore.getName());
                 }
             }
-            if (tAccount.getAcctId() != null) {
+            if (tAccount != null) {
                 List<Long> roleIds = tAccountService.getRoleIdsByAccountId(tAccount.getAcctId());
                 result.put("roleIds", roleIds);
             }
@@ -303,7 +287,7 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/delete/{userIds}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:delete')")
-    public ResponseObject deleteAccount(@PathVariable("userIds") String userIds) {
+    public ResponseObject deleteAccount(@PathVariable("userIds") String userIds) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         String ids[] = userIds.split(",");
         if (ids.length > 0) {
@@ -322,7 +306,7 @@ public class BackendAccountController extends BaseController {
             for (int i = 0; i < ids.length; i++) {
                  if (StringUtil.isNotEmpty(ids[i])) {
                      Long userId = Long.parseLong(ids[i]);
-                     tAccountService.deleteAccount(userId);
+                     tAccountService.deleteAccount(userId, accountInfo);
                  }
             }
         }
@@ -340,15 +324,15 @@ public class BackendAccountController extends BaseController {
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         Integer status = param.get("status") == null ? 0 : Integer.parseInt(param.get("status").toString());
 
-        AccountInfo accountDto = TokenUtil.getAccountInfo();;
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();;
 
         TAccount tAccount = tAccountService.getAccountInfoById(userId.intValue());
-        if (tAccount == null || accountDto == null) {
+        if (tAccount == null || accountInfo == null) {
             return getFailureResult(201, "账户不存在");
         }
 
         tAccount.setAccountStatus(status);
-        tAccountService.updateAccount(tAccount);
+        tAccountService.updateAccount(tAccount, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -360,7 +344,7 @@ public class BackendAccountController extends BaseController {
     @RequestMapping(value = "/resetPwd", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('system:account:edit')")
-    public ResponseObject resetPwd(@RequestBody Map<String, Object> param) {
+    public ResponseObject resetPwd(@RequestBody Map<String, Object> param) throws BusinessCheckException {
         Integer userId = param.get("userId") == null ? 0 : Integer.parseInt(param.get("userId").toString());
         String password = param.get("password") == null ? "" : param.get("password").toString();
 
@@ -374,7 +358,7 @@ public class BackendAccountController extends BaseController {
 
         if (tAccount != null) {
             tAccountService.entryptPassword(tAccount);
-            tAccountService.updateAccount(tAccount);
+            tAccountService.updateAccount(tAccount, account);
         }
 
         return getSuccessResult(true);
