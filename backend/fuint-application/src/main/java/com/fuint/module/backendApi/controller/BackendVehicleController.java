@@ -81,10 +81,9 @@ public class BackendVehicleController extends BaseController {
         if (mtVehicle == null) {
             mtVehicle = new MtVehicle();
         }
-
-        MtUser mtUser = new MtUser();
-        if (StringUtil.isNotEmpty(param.getUserNo())) {
-            mtUser = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), param.getUserNo());
+        Integer userId = null;
+        if (StringUtil.isNotEmpty(param.getUserNo()) && mtVehicle.getUserId() == null) {
+            MtUser mtUser = memberService.queryMemberByUserNo(accountInfo.getMerchantId(), param.getUserNo());
             if (mtUser == null) {
                 mtUser = new MtUser();
                 mtUser.setUserNo(param.getUserNo());
@@ -94,9 +93,10 @@ public class BackendVehicleController extends BaseController {
                 mtUser.setStoreId(accountInfo.getStoreId());
                 mtUser.setStatus(StatusEnum.ENABLED.getKey());
                 mtUser = memberService.addMember(mtUser, null);
+                userId = mtUser.getId();
             }
-        } else if (StringUtil.isNotEmpty(param.getMobile())) {
-            mtUser = memberService.queryMemberByMobile(accountInfo.getMerchantId(), param.getMobile());
+        } else if (StringUtil.isNotEmpty(param.getMobile()) && mtVehicle.getUserId() == null) {
+            MtUser mtUser = memberService.queryMemberByMobile(accountInfo.getMerchantId(), param.getMobile());
             if (mtUser == null) {
                 mtUser = new MtUser();
                 mtUser.setName(param.getName());
@@ -106,6 +106,16 @@ public class BackendVehicleController extends BaseController {
                 mtUser.setStoreId(accountInfo.getStoreId());
                 mtUser.setStatus(StatusEnum.ENABLED.getKey());
                 mtUser = memberService.addMember(mtUser, null);
+                userId = mtUser.getId();
+            }
+        } else {
+            userId = mtVehicle.getUserId();
+            MtUser mtUser = memberService.queryMemberById(userId);
+            if (mtUser != null) {
+                mtUser.setMobile(param.getMobile());
+                mtUser.setUserNo(param.getUserNo());
+                mtUser.setName(param.getName());
+                memberService.updateMember(mtUser, false);
             }
         }
 
@@ -115,7 +125,7 @@ public class BackendVehicleController extends BaseController {
         mtVehicle.setVehicleBrand(vehicleBrand);
         mtVehicle.setVehicleModel(vehicleModel);
         mtVehicle.setMerchantId(accountInfo.getMerchantId());
-        mtVehicle.setUserId(mtUser.getId());
+        mtVehicle.setUserId(userId);
         mtVehicle.setVin(vin);
 
         vehicleService.saveVehicle(mtVehicle);
@@ -126,10 +136,9 @@ public class BackendVehicleController extends BaseController {
     @RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
     @CrossOrigin
     public ResponseObject updateStatus(@RequestBody Map<String, String> param) throws BusinessCheckException {
+        AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer vehicleId = param.get("vehicleId") == null ? 0 : Integer.parseInt(param.get("vehicleId"));
         String status = param.get("status") == null ? StatusEnum.ENABLED.getKey() : param.get("status");
-
-        AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         MtVehicle mtVehicle = vehicleService.queryVehicleById(vehicleId);
         if (mtVehicle == null) {
@@ -138,7 +147,7 @@ public class BackendVehicleController extends BaseController {
         mtVehicle.setOperator(accountInfo.getAccountName());
 
         mtVehicle.setStatus(status);
-        vehicleService.updateVehicle(mtVehicle);
+        vehicleService.updateVehicle(mtVehicle, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -148,7 +157,7 @@ public class BackendVehicleController extends BaseController {
     @CrossOrigin
     public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        vehicleService.deleteVehicle(id, accountInfo.getAccountName());
+        vehicleService.deleteVehicle(id, accountInfo);
         return getSuccessResult(true);
     }
 }

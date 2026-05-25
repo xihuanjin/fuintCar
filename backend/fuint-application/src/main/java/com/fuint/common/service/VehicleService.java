@@ -1,6 +1,7 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fuint.common.dto.AccountInfo;
 import com.fuint.common.dto.VehicleDto;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
@@ -15,9 +16,10 @@ public interface VehicleService extends IService<MtVehicle> {
      * 更新会员车辆
      *
      * @param mtVehicle 会员车辆
+     * @param accountInfo 操作员
      * @return
      * */
-    MtVehicle updateVehicle(MtVehicle mtVehicle);
+    MtVehicle updateVehicle(MtVehicle mtVehicle, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 保存会员车辆
@@ -35,16 +37,15 @@ public interface VehicleService extends IService<MtVehicle> {
      * @throws BusinessCheckException
      * @return
      * */
-    PaginationResponse<VehicleDto> getUserVehicleListByPagination(HttpServletRequest request) throws BusinessCheckException;
+    PaginationResponse<VehicleDto> getUserVehicleListByPagination(HttpServletRequest request);
 
     /**
      * 根据ID查询会员车辆
      *
      * @param id 会员车辆ID
-     * @throws BusinessCheckException
      * @return
      * */
-    VehicleDto getVehicleById(Integer id) throws BusinessCheckException;
+    VehicleDto getVehicleById(Integer id);
 
     /**
      * 根据ID查询会员车辆
@@ -58,11 +59,11 @@ public interface VehicleService extends IService<MtVehicle> {
      * 删除会员车辆
      *
      * @param id 会员车辆ID
-     * @param operator 操作员
+     * @param  accountInfo 操作员
      * @throws BusinessCheckException
      * @return
      * */
-    void deleteVehicle(Integer id, String operator) throws BusinessCheckException;
+    void deleteVehicle(Integer id, AccountInfo  accountInfo) throws BusinessCheckException;
 
     /**
      * 根据用户ID查询会员车辆

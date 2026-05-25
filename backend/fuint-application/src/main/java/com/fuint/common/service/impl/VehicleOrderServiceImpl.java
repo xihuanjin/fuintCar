@@ -89,6 +89,14 @@ public class VehicleOrderServiceImpl extends ServiceImpl<MtVehicleOrderMapper, M
         if (userId != null) {
             lambdaQueryWrapper.eq(MtVehicleOrder::getUserId, userId);
         }
+        Integer merchantId = vehicleOrderPage.getMerchantId();
+        if (merchantId != null && merchantId > 0) {
+            lambdaQueryWrapper.eq(MtVehicleOrder::getMerchantId, merchantId);
+        }
+        Integer storeId = vehicleOrderPage.getStoreId();
+        if (storeId != null && storeId > 0) {
+            lambdaQueryWrapper.eq(MtVehicleOrder::getStoreId, storeId);
+        }
         String vehiclePlateNo = vehicleOrderPage.getVehiclePlateNo();
         if (StringUtils.isNotEmpty(vehiclePlateNo)){
             lambdaQueryWrapper.eq(MtVehicleOrder::getVehiclePlateNo, vehiclePlateNo);

@@ -46,7 +46,7 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
 
     @Override
     @OperationServiceLog(description = "查询用户车辆列表")
-    public PaginationResponse<VehicleDto> getUserVehicleListByPagination(HttpServletRequest request) throws BusinessCheckException {
+    public PaginationResponse<VehicleDto> getUserVehicleListByPagination(HttpServletRequest request) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         String userNo = request.getParameter("userNo");
@@ -137,7 +137,7 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
     }
 
     @Override
-    public VehicleDto getVehicleById(Integer id) throws BusinessCheckException {
+    public VehicleDto getVehicleById(Integer id) {
         MtVehicle mtVehicle = mtVehicleMapper.selectById(id);
         VehicleDto vehicleDto = new VehicleDto();
         BeanUtils.copyProperties(mtVehicle, vehicleDto);
@@ -155,9 +155,11 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
     @Override
     @OperationServiceLog(description = "更新车辆信息")
     @Transactional(rollbackFor = Exception.class)
-    public MtVehicle updateVehicle(MtVehicle mtVehicle) {
+    public MtVehicle updateVehicle(MtVehicle mtVehicle, AccountInfo accountInfo) throws BusinessCheckException {
         mtVehicle.setUpdateTime(new Date());
-
+        if (accountInfo.getMerchantId() > 0 && !mtVehicle.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
         Boolean result = updateById(mtVehicle);
         logger.info("更新车辆信息结果：{}", result);
 
@@ -241,14 +243,17 @@ public class VehicleServiceImpl extends ServiceImpl<MtVehicleMapper, MtVehicle> 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deleteVehicle(Integer id, String operator) throws BusinessCheckException {
+    public void deleteVehicle(Integer id, AccountInfo  accountInfo) throws BusinessCheckException {
         MtVehicle mtVehicle = mtVehicleMapper.selectById(id);
         if (mtVehicle == null) {
             throw new BusinessCheckException("车辆不存在");
         }
+        if (accountInfo.getMerchantId() > 0 && !mtVehicle.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("不同商户，无操作权限");
+        }
         mtVehicle.setStatus(StatusEnum.DISABLE.getKey());
         mtVehicle.setUpdateTime(new Date());
-        logger.info("删除会员车辆，ID {},operator {}", id, operator);
+        logger.info("删除会员车辆，ID {},operator {}", id, accountInfo.getAccountName());
 
         updateById(mtVehicle);
     }
