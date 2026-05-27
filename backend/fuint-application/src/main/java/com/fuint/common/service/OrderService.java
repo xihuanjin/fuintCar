@@ -1,8 +1,8 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.UserOrderDto;
-import com.fuint.common.dto.OrderDto;
+import com.fuint.common.dto.order.UserOrderDto;
+import com.fuint.common.dto.order.OrderDto;
 import com.fuint.common.param.OrderListParam;
 import com.fuint.common.param.RechargeParam;
 import com.fuint.common.param.SettlementParam;
@@ -36,11 +36,11 @@ public interface OrderService extends IService<MtOrder> {
     /**
      * 创建订单
      *
-     * @param  reqDto
+     * @param  orderDto
      * @throws BusinessCheckException
      * @return
      */
-    MtOrder saveOrder(OrderDto reqDto) throws BusinessCheckException;
+    MtOrder saveOrder(OrderDto orderDto) throws BusinessCheckException;
 
     /**
      * 订单提交结算

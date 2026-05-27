@@ -1,7 +1,7 @@
 package com.fuint.module.backendApi.controller.member;
 
-import com.fuint.common.dto.member.UserTagDto;
 import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.dto.member.UserTagDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BatchSetUserTagParam;
 import com.fuint.common.param.SetUserTagParam;
@@ -46,7 +46,6 @@ public class BackendUserTagController extends BaseController {
     @ApiOperation(value = "标签列表")
     @RequestMapping(value = "/list", method = RequestMethod.GET)
     @CrossOrigin
-    @PreAuthorize("@pms.hasPermission('member:tag:index')")
     public ResponseObject list() throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         Integer merchantId = accountInfo.getMerchantId();
@@ -76,19 +75,17 @@ public class BackendUserTagController extends BaseController {
     @ApiOperation(value = "保存标签")
     @RequestMapping(value = "/save", method = RequestMethod.POST)
     @CrossOrigin
-    @PreAuthorize("@pms.hasPermission('member:tag:edit')")
+    @PreAuthorize("@pms.hasPermission('member:userTag:index')")
     public ResponseObject save(@RequestBody MtUserTag mtUserTag) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        Integer merchantId = accountInfo.getMerchantId();
-        String operator = accountInfo != null ? accountInfo.getAccountName() : "";
 
-        mtUserTag.setMerchantId(merchantId);
-        mtUserTag.setOperator(operator);
+        mtUserTag.setMerchantId(accountInfo.getMerchantId());
+        mtUserTag.setOperator(accountInfo.getAccountName());
 
         if (mtUserTag.getId() != null && mtUserTag.getId() > 0) {
-            userTagService.updateTag(mtUserTag, merchantId);
+            userTagService.updateTag(mtUserTag, accountInfo);
         } else {
-            userTagService.addTag(mtUserTag, merchantId);
+            userTagService.addTag(mtUserTag);
         }
 
         return getSuccessResult(true);
@@ -97,7 +94,7 @@ public class BackendUserTagController extends BaseController {
     @ApiOperation(value = "删除标签")
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
-    @PreAuthorize("@pms.hasPermission('member:tag:delete')")
+    @PreAuthorize("@pms.hasPermission('member:userTag:index')")
     public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
@@ -131,7 +128,7 @@ public class BackendUserTagController extends BaseController {
     @ApiOperation(value = "设置会员标签")
     @RequestMapping(value = "/setUserTags", method = RequestMethod.POST)
     @CrossOrigin
-    @PreAuthorize("@pms.hasPermission('member:tag:edit')")
+    @PreAuthorize("@pms.hasPermission('member:userTag:index')")
     public ResponseObject setUserTags(@RequestBody SetUserTagParam param) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         String operator = accountInfo != null ? accountInfo.getAccountName() : "";
@@ -168,7 +165,7 @@ public class BackendUserTagController extends BaseController {
     @ApiOperation(value = "批量设置会员标签")
     @RequestMapping(value = "/batchSetTags", method = RequestMethod.POST)
     @CrossOrigin
-    @PreAuthorize("@pms.hasPermission('member:tag:edit')")
+    @PreAuthorize("@pms.hasPermission('member:userTag:index')")
     public ResponseObject batchSetTags(@RequestBody BatchSetUserTagParam param) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         String operator = accountInfo != null ? accountInfo.getAccountName() : "";

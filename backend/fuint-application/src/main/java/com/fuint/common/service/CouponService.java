@@ -1,8 +1,8 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.ReqCouponDto;
-import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.dto.coupon.ReqCouponDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.param.CouponListParam;
 import com.fuint.common.param.CouponPage;
 import com.fuint.framework.exception.BusinessCheckException;

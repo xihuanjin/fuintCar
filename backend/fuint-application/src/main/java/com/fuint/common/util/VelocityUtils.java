@@ -116,7 +116,7 @@ public class VelocityUtils {
         } else if (template.contains("serviceImpl.java.vm")) {
             fileName = StringUtil.format("{}/impl/{}ServiceImpl.java", SERVICE_PATH, tableName);
         } else if (template.contains("BackendController.java.vm")) {
-            fileName = StringUtil.format("{}/{}Controller.java", CONTROLLER_PATH, "Backend" + tableName);
+            fileName = StringUtil.format("{}/{}/{}Controller.java", CONTROLLER_PATH, moduleName, "Backend" + tableName);
         } else if (template.contains("mapper.xml.vm")) {
             fileName = StringUtil.format("{}/{}Mapper.xml", REPOSITORY_PATH + MAPPER_XML_PATH, tablePrefix + tableName);
         } else if (template.contains("api.js.vm")) {

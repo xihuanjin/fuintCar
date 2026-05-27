@@ -1,8 +1,8 @@
 package com.fuint.module.merchantApi.controller;
 
-import com.fuint.common.dto.AccountInfo;
-import com.fuint.common.dto.RefundDto;
-import com.fuint.common.dto.UserInfo;
+import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.dto.order.RefundDto;
+import com.fuint.common.dto.member.UserInfo;
 import com.fuint.common.enums.RefundStatusEnum;
 import com.fuint.common.param.RefundDetailParam;
 import com.fuint.common.service.MemberService;

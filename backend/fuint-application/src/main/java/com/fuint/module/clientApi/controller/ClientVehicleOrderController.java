@@ -1,7 +1,7 @@
 package com.fuint.module.clientApi.controller;
 
-import com.fuint.common.dto.UserInfo;
-import com.fuint.common.dto.VehicleOrderDto;
+import com.fuint.common.dto.member.UserInfo;
+import com.fuint.common.dto.order.VehicleOrderDto;
 import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.common.service.VehicleOrderService;
 import com.fuint.common.util.TokenUtil;

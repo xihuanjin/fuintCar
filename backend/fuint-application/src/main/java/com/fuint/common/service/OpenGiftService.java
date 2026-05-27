@@ -1,7 +1,7 @@
 package com.fuint.common.service;
 
-import com.fuint.common.dto.OpenGiftDto;
-import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.dto.member.OpenGiftDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.param.OpenGiftPage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.web.ResponseObject;

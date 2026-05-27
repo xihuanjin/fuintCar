@@ -1,7 +1,7 @@
 package com.fuint.module.clientApi.controller;
 
-import com.fuint.common.dto.UserInfo;
-import com.fuint.common.dto.VehicleDto;
+import com.fuint.common.dto.member.UserInfo;
+import com.fuint.common.dto.order.VehicleDto;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.enums.YesOrNoEnum;
 import com.fuint.common.service.MerchantService;

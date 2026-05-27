@@ -1,9 +1,9 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.MemberGroupDto;
-import com.fuint.common.dto.UserGroupDto;
-import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.dto.member.MemberGroupDto;
+import com.fuint.common.dto.member.UserGroupDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.param.MemberGroupPage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;

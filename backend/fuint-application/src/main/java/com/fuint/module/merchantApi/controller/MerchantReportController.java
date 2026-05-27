@@ -1,8 +1,8 @@
 package com.fuint.module.merchantApi.controller;
 
-import com.fuint.common.dto.GoodsTopDto;
-import com.fuint.common.dto.MemberTopDto;
-import com.fuint.common.dto.UserInfo;
+import com.fuint.common.dto.goods.GoodsTopDto;
+import com.fuint.common.dto.report.MemberTopDto;
+import com.fuint.common.dto.member.UserInfo;
 import com.fuint.common.param.StatisticParam;
 import com.fuint.common.service.*;
 import com.fuint.common.util.DateUtil;

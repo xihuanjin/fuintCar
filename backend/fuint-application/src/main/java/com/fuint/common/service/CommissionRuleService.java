@@ -1,8 +1,8 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.AccountInfo;
-import com.fuint.common.dto.CommissionRuleDto;
+import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.dto.commission.CommissionRuleDto;
 import com.fuint.common.param.CommissionRuleParam;
 import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;

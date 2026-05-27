@@ -1,7 +1,7 @@
 package com.fuint.module.merchantApi.controller;
 
-import com.fuint.common.dto.UserInfo;
-import com.fuint.common.dto.AccountInfo;
+import com.fuint.common.dto.member.UserInfo;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.BookStatusEnum;
 import com.fuint.common.param.BookItemPage;
 import com.fuint.common.service.BookItemService;

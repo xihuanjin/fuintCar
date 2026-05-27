@@ -1,8 +1,8 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.AccountInfo;
-import com.fuint.common.dto.UserTagDto;
+import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.dto.member.UserTagDto;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.repository.model.MtUserTag;
 

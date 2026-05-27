@@ -1,7 +1,7 @@
 package com.fuint.common.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.fuint.common.dto.VehicleOrderDto;
+import com.fuint.common.dto.order.VehicleOrderDto;
 import com.fuint.common.param.VehicleOrderPage;
 import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.framework.pagination.PaginationResponse;
