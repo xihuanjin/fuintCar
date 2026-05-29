@@ -1,8 +1,8 @@
 package com.fuint.module.backendApi.controller.book;
 
-import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.dto.book.BookDto;
 import com.fuint.common.dto.book.BookTimeDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.BookPage;
 import com.fuint.common.param.StatusParam;
@@ -37,14 +37,14 @@ import java.util.stream.Collectors;
  * Created by FSQ
  * CopyRight https://www.fuint.cn
  */
-@Api(tags="管理端-预约项目相关接口")
+@Api(tags="管理端-预约相关接口")
 @RestController
 @AllArgsConstructor
 @RequestMapping(value = "/backendApi/book")
 public class BackendBookController extends BaseController {
 
     /**
-     * 预约项目服务接口
+     * 预约服务接口
      */
     private BookService bookService;
 
@@ -105,6 +105,7 @@ public class BackendBookController extends BaseController {
         if (bookDto == null) {
             return getFailureResult(201);
         }
+
         bookDto.setOperator(accountInfo.getAccountName());
         bookDto.setStatus(params.getStatus());
         bookService.updateBook(bookDto, accountInfo);
@@ -122,7 +123,7 @@ public class BackendBookController extends BaseController {
     public ResponseObject saveHandler(@RequestBody BookDto bookDto) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() < 1) {
-            return getFailureResult(5002);
+            getFailureResult(5002);
         }
         if (accountInfo.getStoreId() != null && accountInfo.getStoreId() > 0) {
             bookDto.setStoreId(accountInfo.getStoreId());

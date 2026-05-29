@@ -3,19 +3,19 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.dto.commission.CommissionRuleDto;
 import com.fuint.common.dto.commission.CommissionRuleItemDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.CommissionTypeEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.CommissionRuleItemParam;
+import com.fuint.common.param.CommissionRulePage;
 import com.fuint.common.param.CommissionRuleParam;
 import com.fuint.common.service.CommissionRuleService;
 import com.fuint.common.service.GoodsService;
 import com.fuint.common.service.SettingService;
 import com.fuint.framework.annoation.OperationServiceLog;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.repository.mapper.MtCommissionRuleItemMapper;
 import com.fuint.repository.mapper.MtCommissionRuleMapper;
@@ -67,44 +67,44 @@ public class CommissionRuleServiceImpl extends ServiceImpl<MtCommissionRuleMappe
     /**
      * 分页查询规则列表
      *
-     * @param paginationRequest
+     * @param commissionRulePage
      * @return
      */
     @Override
-    public PaginationResponse<MtCommissionRule> queryDataByPagination(PaginationRequest paginationRequest) {
-        Page<MtCommissionRule> pageHelper = PageHelper.startPage(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+    public PaginationResponse<MtCommissionRule> queryDataByPagination(CommissionRulePage commissionRulePage) {
+        Page<MtCommissionRule> pageHelper = PageHelper.startPage(commissionRulePage.getPage(), commissionRulePage.getPageSize());
         LambdaQueryWrapper<MtCommissionRule> lambdaQueryWrapper = Wrappers.lambdaQuery();
         lambdaQueryWrapper.ne(MtCommissionRule::getStatus, StatusEnum.DISABLE.getKey());
 
-        String name = paginationRequest.getSearchParams().get("name") == null ? "" : paginationRequest.getSearchParams().get("name").toString();
+        String name = commissionRulePage.getName();
         if (StringUtils.isNotBlank(name)) {
             lambdaQueryWrapper.like(MtCommissionRule::getName, name);
         }
-        String status = paginationRequest.getSearchParams().get("status") == null ? "" : paginationRequest.getSearchParams().get("status").toString();
+        String status = commissionRulePage.getStatus();
         if (StringUtils.isNotBlank(status)) {
             lambdaQueryWrapper.eq(MtCommissionRule::getStatus, status);
         }
-        String target = paginationRequest.getSearchParams().get("target") == null ? "" : paginationRequest.getSearchParams().get("target").toString();
+        String target = commissionRulePage.getTarget();
         if (StringUtils.isNotBlank(target)) {
             lambdaQueryWrapper.eq(MtCommissionRule::getTarget, target);
         }
-        String type = paginationRequest.getSearchParams().get("type") == null ? "" : paginationRequest.getSearchParams().get("type").toString();
+        String type = commissionRulePage.getType();
         if (StringUtils.isNotBlank(type)) {
             lambdaQueryWrapper.eq(MtCommissionRule::getType, type);
         }
-        String merchantId = paginationRequest.getSearchParams().get("merchantId") == null ? "" : paginationRequest.getSearchParams().get("merchantId").toString();
-        if (StringUtils.isNotBlank(merchantId)) {
+        Integer merchantId = commissionRulePage.getMerchantId();
+        if (merchantId != null && merchantId > 0) {
             lambdaQueryWrapper.eq(MtCommissionRule::getMerchantId, merchantId);
         }
-        String storeId = paginationRequest.getSearchParams().get("storeId") == null ? "" : paginationRequest.getSearchParams().get("storeId").toString();
-        if (StringUtils.isNotBlank(storeId)) {
+        Integer storeId = commissionRulePage.getStoreId();
+        if (storeId != null && storeId > 0) {
             lambdaQueryWrapper.eq(MtCommissionRule::getStoreId, storeId);
         }
 
         lambdaQueryWrapper.orderByDesc(MtCommissionRule::getId);
         List<MtCommissionRule> dataList = mtCommissionRuleMapper.selectList(lambdaQueryWrapper);
 
-        PageRequest pageRequest = PageRequest.of(paginationRequest.getCurrentPage(), paginationRequest.getPageSize());
+        PageRequest pageRequest = PageRequest.of(commissionRulePage.getPage(), commissionRulePage.getPageSize());
         PageImpl pageImpl = new PageImpl(dataList, pageRequest, pageHelper.getTotal());
         PaginationResponse<MtCommissionRule> paginationResponse = new PaginationResponse(pageImpl, MtCommissionRule.class);
         paginationResponse.setTotalPages(pageHelper.getPages());
@@ -182,7 +182,7 @@ public class CommissionRuleServiceImpl extends ServiceImpl<MtCommissionRuleMappe
      * @return
      */
     @Override
-    public CommissionRuleDto queryCommissionRuleById(Integer id) throws BusinessCheckException {
+    public CommissionRuleDto queryCommissionRuleById(Integer id) {
         MtCommissionRule mtCommissionRule = mtCommissionRuleMapper.selectById(id);
         if (mtCommissionRule == null) {
             return null;
@@ -242,6 +242,7 @@ public class CommissionRuleServiceImpl extends ServiceImpl<MtCommissionRuleMappe
      * 更新分销提成规则
      *
      * @param  commissionRule 规则参数
+     * @param  accountInfo
      * @throws BusinessCheckException
      * @return
      */
@@ -254,8 +255,8 @@ public class CommissionRuleServiceImpl extends ServiceImpl<MtCommissionRuleMappe
             logger.error("更新分销提成规则失败...");
             throw new BusinessCheckException("该数据状态异常");
         }
-        if (accountInfo.getMerchantId() > 0 && !mtCommissionRule.getMerchantId().equals(accountInfo.getMerchantId())) {
-            throw new BusinessCheckException("不同商户，没有操作权限");
+        if (!mtCommissionRule.getMerchantId().equals(accountInfo.getMerchantId())) {
+            throw new BusinessCheckException("您没有操作权限");
         }
         mtCommissionRule.setId(commissionRule.getId());
         if (commissionRule.getName() != null) {

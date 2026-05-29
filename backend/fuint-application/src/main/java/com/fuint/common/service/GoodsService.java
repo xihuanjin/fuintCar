@@ -30,7 +30,7 @@ public interface GoodsService {
      * @param  param
      * @return
      */
-    PaginationResponse<GoodsDto> queryGoodsListByPagination(GoodsListParam param) throws BusinessCheckException;
+    PaginationResponse<GoodsDto> queryGoodsListByPagination(GoodsListParam param);
 
     /**
      * 保存商品
@@ -58,20 +58,18 @@ public interface GoodsService {
      * 根据ID获取商品信息
      *
      * @param  id 商品ID
-     * @throws BusinessCheckException
      * @return
      */
-    MtGoods queryGoodsById(Integer id) throws BusinessCheckException;
+    MtGoods queryGoodsById(Integer id);
 
     /**
      * 根据编码获取商品信息
      *
      * @param  merchantId
      * @param  goodsNo
-     * @throws BusinessCheckException
      * @return
      */
-    MtGoods queryGoodsByGoodsNo(Integer merchantId, String goodsNo) throws BusinessCheckException;
+    MtGoods queryGoodsByGoodsNo(Integer merchantId, String goodsNo);
 
     /**
      * 根据条码获取sku信息
@@ -80,7 +78,7 @@ public interface GoodsService {
      * @throws BusinessCheckException
      * @return
      * */
-    MtGoodsSku getSkuInfoBySkuNo(String skuNo) throws BusinessCheckException;
+    MtGoodsSku getSkuInfoBySkuNo(String skuNo);
 
     /**
      * 根据ID获取商品详情

@@ -3,14 +3,15 @@ package com.fuint.common.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.dto.commission.CommissionCashDto;
 import com.fuint.common.dto.order.OrderUserDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.CommissionCashStatusEnum;
 import com.fuint.common.enums.CommissionStatusEnum;
 import com.fuint.common.enums.CommissionTargetEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.CommissionCashPage;
+import com.fuint.common.param.WithdrawParam;
 import com.fuint.common.service.*;
 import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.SeqUtil;
@@ -89,7 +90,7 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
      * @return
      */
     @Override
-    public PaginationResponse<CommissionCashDto> queryCommissionCashByPagination(CommissionCashPage commissionCashPage) throws BusinessCheckException {
+    public PaginationResponse<CommissionCashDto> queryCommissionCashByPagination(CommissionCashPage commissionCashPage) {
         Page<MtCommissionCash> pageHelper = PageHelper.startPage(commissionCashPage.getPage(), commissionCashPage.getPageSize());
         LambdaQueryWrapper<MtCommissionCash> lambdaQueryWrapper = Wrappers.lambdaQuery();
         String status = commissionCashPage.getStatus();
@@ -182,7 +183,7 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
      * 分销提成结算
      *
      * @param commissionSettleRequest 结算参数
-     * @param accountInfo 操作用户
+     * @param accountInfo 操作人信息
      * @return
      */
     @Override
@@ -432,5 +433,22 @@ public class CommissionCashServiceImpl extends ServiceImpl<MtCommissionCashMappe
                 throw new BusinessCheckException("付款失败，未找到会员信息");
             }
         }
+    }
+
+    /**
+     * 申请提现
+     *
+     * @param  withdrawParam 请求参数
+     * @throws BusinessCheckException
+     * @return
+     */
+    @Override
+    @Transactional
+    @OperationServiceLog(description = "支付结算金额到用户余额")
+    public Boolean withdraw(WithdrawParam withdrawParam) throws BusinessCheckException {
+        if (withdrawParam.getAmount() == null || withdrawParam.getAmount().compareTo(new BigDecimal("0")) <= 0) {
+            throw new BusinessCheckException("提现金额不能为空或小于等于0");
+        }
+        return true;
     }
 }
