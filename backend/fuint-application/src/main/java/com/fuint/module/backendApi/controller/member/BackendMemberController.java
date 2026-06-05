@@ -12,6 +12,7 @@ import com.fuint.common.param.MemberPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.*;
 import com.fuint.framework.exception.BusinessCheckException;
+import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -80,11 +81,6 @@ public class BackendMemberController extends BaseController {
     private UploadService uploadService;
 
     /**
-     * 会员等级服务接口
-     **/
-    private UserGradeService userGradeService;
-
-    /**
      * 会员标签服务接口
      **/
     private UserTagService userTagService;
@@ -93,6 +89,11 @@ public class BackendMemberController extends BaseController {
      * 会员标签关联服务接口
      **/
     private UserTagRelationService userTagRelationService;
+
+    /**
+     * 会员等级服务接口
+     **/
+    private UserGradeService userGradeService;
 
     /**
      * 查询会员列表
@@ -175,12 +176,6 @@ public class BackendMemberController extends BaseController {
     @PreAuthorize("@pms.hasPermission('member:index')")
     public ResponseObject delete(@PathVariable("id") Integer id) throws BusinessCheckException {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        MtUser mtUser = memberService.queryMemberById(id);
-        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
-            if (!mtUser.getMerchantId().equals(accountInfo.getMerchantId())) {
-                return getFailureResult(1004);
-            }
-        }
         memberService.deleteMember(id, accountInfo);
         return getSuccessResult(true);
     }
@@ -203,6 +198,9 @@ public class BackendMemberController extends BaseController {
             mtUser = new MtUser();
         } else {
             mtUser = memberService.queryMemberById(memberInfo.getId());
+            if (!mtUser.getMerchantId().equals(accountInfo.getMerchantId())) {
+                return getFailureResult(1004);
+            }
         }
 
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
@@ -267,7 +265,13 @@ public class BackendMemberController extends BaseController {
         memberInfo.setMobile(CommonUtil.hidePhone(memberInfo.getMobile()));
         Map<Integer, List<UserTagDto>> userTagMap = userTagService.getUserTagsByUserIds(mtUser.getMerchantId(), Arrays.asList(memberInfo.getId()));
         memberInfo.setTags(userTagMap.get(memberInfo.getId()));
-        List<MtUserGrade> userGradeList = userGradeService.getMerchantGradeList(accountInfo.getMerchantId(), null);
+
+        Map<String, Object> param = new HashMap<>();
+        if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
+            param.put("MERCHANT_ID", accountInfo.getMerchantId());
+        }
+        param.put("STATUS", StatusEnum.ENABLED.getKey());
+        List<MtUserGrade> userGradeList = memberService.queryMemberGradeByParams(param);
 
         Map<String, Object> result = new HashMap<>();
         result.put("userGradeList", userGradeList);
@@ -292,12 +296,14 @@ public class BackendMemberController extends BaseController {
         String submitOrderNeedPhone = YesOrNoEnum.FALSE.getKey();
         String loginNeedPhone = YesOrNoEnum.FALSE.getKey();
         String openWxCard = YesOrNoEnum.FALSE.getKey();
+        String forceUpdateAvatar = YesOrNoEnum.FALSE.getKey();
+        String forceUpdateNickname = YesOrNoEnum.FALSE.getKey();
         WxCardDto wxMemberCard = null;
         for (MtSetting setting : settingList) {
             if (StringUtil.isNotEmpty(setting.getValue())) {
                 if (setting.getName().equals(UserSettingEnum.GET_COUPON_NEED_PHONE.getKey())) {
                     getCouponNeedPhone = setting.getValue();
-                } else if (setting.getName().equals(UserSettingEnum.GET_COUPON_NEED_PHONE.getKey())) {
+                } else if (setting.getName().equals(UserSettingEnum.SUBMIT_ORDER_NEED_PHONE.getKey())) {
                     submitOrderNeedPhone = setting.getValue();
                 } else if (setting.getName().equals(UserSettingEnum.LOGIN_NEED_PHONE.getKey())) {
                     loginNeedPhone = setting.getValue();
@@ -305,6 +311,10 @@ public class BackendMemberController extends BaseController {
                     openWxCard = setting.getValue();
                 } else if (setting.getName().equals(UserSettingEnum.WX_MEMBER_CARD.getKey())) {
                     wxMemberCard = JsonUtil.parseObject(setting.getValue(), WxCardDto.class);
+                } else if (setting.getName().equals(UserSettingEnum.FORCE_UPDATE_AVATAR.getKey())) {
+                    forceUpdateAvatar = setting.getValue();
+                } else if (setting.getName().equals(UserSettingEnum.FORCE_UPDATE_NICKNAME.getKey())) {
+                    forceUpdateNickname = setting.getValue();
                 }
             }
         }
@@ -315,6 +325,8 @@ public class BackendMemberController extends BaseController {
         result.put("loginNeedPhone", loginNeedPhone);
         result.put("openWxCard", openWxCard);
         result.put("wxMemberCard", wxMemberCard);
+        result.put("forceUpdateAvatar", forceUpdateAvatar);
+        result.put("forceUpdateNickname", forceUpdateNickname);
         result.put("imagePath", settingService.getUploadBasePath());
 
         return getSuccessResult(result);
@@ -333,6 +345,8 @@ public class BackendMemberController extends BaseController {
         String loginNeedPhone = param.get("loginNeedPhone") != null ? param.get("loginNeedPhone").toString() : null;
         String openWxCard = param.get("openWxCard") != null ? param.get("openWxCard").toString() : null;
         String wxMemberCard = param.get("wxMemberCard") != null ? param.get("wxMemberCard").toString() : null;
+        String forceUpdateAvatar = param.get("forceUpdateAvatar") != null ? param.get("forceUpdateAvatar").toString() : null;
+        String forceUpdateNickname = param.get("forceUpdateNickname") != null ? param.get("forceUpdateNickname").toString() : null;
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo.getMerchantId() == null || accountInfo.getMerchantId() <= 0) {
@@ -353,6 +367,10 @@ public class BackendMemberController extends BaseController {
                 mtSetting.setValue(openWxCard);
             } else if (setting.getKey().equals(UserSettingEnum.WX_MEMBER_CARD.getKey())) {
                 mtSetting.setValue(wxMemberCard);
+            } else if (setting.getKey().equals(UserSettingEnum.FORCE_UPDATE_AVATAR.getKey())) {
+                mtSetting.setValue(forceUpdateAvatar);
+            } else if (setting.getKey().equals(UserSettingEnum.FORCE_UPDATE_NICKNAME.getKey())) {
+                mtSetting.setValue(forceUpdateNickname);
             }
             mtSetting.setDescription(setting.getValue());
             mtSetting.setOperator(accountInfo.getAccountName());
@@ -456,19 +474,8 @@ public class BackendMemberController extends BaseController {
         String groupIds = request.getParameter("groupIds") != null ? request.getParameter("groupIds") : "";
         String keyword = request.getParameter("keyword") != null ? request.getParameter("keyword") : "";
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-
         List<GroupMemberDto> memberList = memberService.searchMembers(accountInfo.getMerchantId(), keyword, groupIds,1, Constants.MAX_ROWS);
         return getSuccessResult(memberList);
-    }
-
-    /**
-     * 下载会员导入模板
-     */
-    @ApiOperation(value = "下载会员导入模板")
-    @RequestMapping(value = "/downloadTemplate", method = RequestMethod.GET)
-    @CrossOrigin
-    public void downloadTemplate(HttpServletResponse response) throws IOException {
-        ExcelUtil.downLoadTemplate(response, "MemberTemplate.xlsx");
     }
 
     /**
@@ -490,7 +497,7 @@ public class BackendMemberController extends BaseController {
         PaginationResponse<UserDto> result = memberService.queryMemberListByPagination(memberPage);
 
         // 会员等级映射
-        List<MtUserGrade> userGradeList = userGradeService.getMerchantGradeList(accountInfo.getMerchantId(), null);
+        List<MtUserGrade> userGradeList = userGradeService.getMerchantGradeList(accountInfo.getMerchantId(), StatusEnum.ENABLED.getKey());
         Map<Integer, String> gradeMap = new HashMap<>();
         for (MtUserGrade grade : userGradeList) {
             gradeMap.put(grade.getId(), grade.getName());
@@ -537,6 +544,16 @@ public class BackendMemberController extends BaseController {
     }
 
     /**
+     * 下载会员导入模板
+     */
+    @ApiOperation(value = "下载会员导入模板")
+    @RequestMapping(value = "/downloadTemplate", method = RequestMethod.GET)
+    @CrossOrigin
+    public void downloadTemplate(HttpServletResponse response) throws IOException {
+        ExcelUtil.downLoadTemplate(response, "MemberTemplate.xlsx");
+    }
+
+    /**
      * 上传会员导入文件
      */
     @ApiOperation(value = "上传会员导入文件")
@@ -550,7 +567,6 @@ public class BackendMemberController extends BaseController {
         String filePath = uploadService.saveUploadFile(request, file);
 
         Boolean result = memberService.importMember(file, accountInfo, filePath);
-
         return getSuccessResult(result);
     }
 }

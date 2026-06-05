@@ -241,13 +241,13 @@ public class OpenGiftServiceImpl extends ServiceImpl<MtOpenGiftMapper, MtOpenGif
      * @return
      * */
     @Override
-    public Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) throws BusinessCheckException {
+    public Boolean openGift(Integer userId, Integer gradeId, boolean isNewMember) {
         if (gradeId == null || gradeId.compareTo(0) <= 0) {
             return false;
         }
         MtUser user = mtUserMapper.selectById(userId);
         if (user == null) {
-            throw new BusinessCheckException("会员状态异常");
+            return false;
         }
         if (user.getIsStaff().equals(YesOrNoEnum.YES.getKey())) {
             return false;
