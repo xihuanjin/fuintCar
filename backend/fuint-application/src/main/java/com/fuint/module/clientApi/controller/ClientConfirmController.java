@@ -61,7 +61,7 @@ public class ClientConfirmController extends BaseController {
     @ApiOperation(value = "核销卡券")
     @RequestMapping(value = "/doConfirm", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject doConfirm(@RequestBody ConfirmParam confirmParam) {
+    public ResponseObject doConfirm(@RequestBody ConfirmParam confirmParam) throws BusinessCheckException {
         String code = confirmParam.getCode() == null ? "" : confirmParam.getCode();
         String amount = (confirmParam.getAmount() == null || confirmParam.getAmount() == "") ? "0" : confirmParam.getAmount();
         String remark = confirmParam.getRemark() == null ? "" : confirmParam.getRemark();
@@ -117,11 +117,7 @@ public class ClientConfirmController extends BaseController {
         Integer userCouponId = userCoupon.getId();
         String confirmCode = "";
 
-        try {
-            confirmCode = couponService.useCoupon(userCouponId, mtUser.getId(), staffInfo.getStoreId(), 0, new BigDecimal(amount), remark);
-        } catch (BusinessCheckException e) {
-            return getFailureResult(1003, e.getMessage());
-        }
+        confirmCode = couponService.useCoupon(userCouponId, mtUser.getId(), staffInfo.getStoreId(), 0, new BigDecimal(amount), remark);
 
         // 获取最新余额
         MtUserCoupon userCouponNew = mtUserCouponMapper.selectById(userCoupon.getId());

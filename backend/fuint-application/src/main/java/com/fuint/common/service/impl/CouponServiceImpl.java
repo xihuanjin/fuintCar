@@ -752,7 +752,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
                     userCoupon.setExpireTime(expireTime);
                 }
                 // 12位随机数
-                userCoupon.setCode(SeqUtil.getRandomNumber(12));
+                userCoupon.setCode(SeqUtil.getRandomNumber(16));
                 userCoupon.setUuid(uuid);
                 mtUserCouponMapper.insert(userCoupon);
             }
@@ -977,7 +977,6 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
             if (newBalance.compareTo(new BigDecimal("0")) == 0) {
                 userCoupon.setStatus(UserCouponStatusEnum.USED.getKey());
             }
-
             userCoupon.setBalance(newBalance);
         } else if (couponInfo.getType().equals(CouponTypeEnum.TIMER.getKey())) {
             // 计次卡核销，增加核销次数至满
@@ -992,6 +991,7 @@ public class CouponServiceImpl extends ServiceImpl<MtCouponMapper, MtCoupon> imp
         if (storeId != null && storeId > 0) {
             userCoupon.setStoreId(storeId);
         }
+        userCoupon.setCode(SeqUtil.getRandomNumber(16));
         mtUserCouponMapper.updateById(userCoupon);
 
         // 生成核销流水
