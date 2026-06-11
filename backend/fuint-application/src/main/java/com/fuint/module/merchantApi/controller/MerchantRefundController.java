@@ -125,7 +125,7 @@ public class MerchantRefundController extends BaseController {
         MtUser userInfo = memberService.queryMemberById(mtUser.getId());
         MtStaff staffInfo = staffService.queryStaffByMobile(userInfo.getMobile());
 
-        if (staffInfo == null || (staffInfo.getStoreId() != null && staffInfo.getStoreId() > 0 && !staffInfo.getStoreId().equals(refundInfo.getStoreInfo().getId()))) {
+        if (staffInfo == null || (staffInfo.getStoreId() != null && staffInfo.getStoreId() > 0 && !staffInfo.getStoreId().equals(refundInfo.getStoreId()))) {
             return getFailureResult(1004);
         }
 

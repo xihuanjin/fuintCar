@@ -12,7 +12,6 @@ import com.fuint.common.param.MemberPage;
 import com.fuint.common.service.*;
 import com.fuint.common.util.*;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -474,7 +473,7 @@ public class BackendMemberController extends BaseController {
         String groupIds = request.getParameter("groupIds") != null ? request.getParameter("groupIds") : "";
         String keyword = request.getParameter("keyword") != null ? request.getParameter("keyword") : "";
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
-        List<GroupMemberDto> memberList = memberService.searchMembers(accountInfo.getMerchantId(), keyword, groupIds,1, Constants.MAX_ROWS);
+        List<GroupMemberDto> memberList = memberService.searchMembers(accountInfo.getMerchantId(), keyword, groupIds, Constants.PAGE_NUMBER, Constants.MAX_ROWS);
         return getSuccessResult(memberList);
     }
 
