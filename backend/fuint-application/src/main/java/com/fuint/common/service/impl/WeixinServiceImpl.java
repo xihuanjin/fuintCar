@@ -16,7 +16,6 @@ import com.fuint.common.enums.*;
 import com.fuint.common.http.HttpRESTDataClient;
 import com.fuint.common.service.*;
 import com.fuint.common.util.AliyunOssUtil;
-import com.fuint.common.util.Base64Util;
 import com.fuint.common.util.RedisUtil;
 import com.fuint.common.vo.printer.OrderStatusType;
 import com.fuint.framework.exception.BusinessCheckException;
@@ -685,85 +684,6 @@ public class WeixinServiceImpl implements WeixinService {
         }
     }
 
-    /***
-     * 生成二维码
-     *
-     * @param merchantId 商户ID
-     * @param type 类型
-     * @param id 数据ID
-     * @param page 页面
-     * @param width 宽度
-     * @return
-     * */
-    @Override
-    public String createQrCode(Integer merchantId, String type, Integer id, String page, Integer width) throws BusinessCheckException {
-        try {
-            String accessToken = getAccessToken(merchantId, true,true);
-            if (StringUtil.isEmpty(accessToken)) {
-                throw new BusinessCheckException("生成二维码出错，请检查小程序配置");
-            }
-
-            String url = "https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=" + accessToken;
-            String reqDataJsonStr = "";
-
-            Map<String, Object> reqData = new HashMap<>();
-            reqData.put("access_token", accessToken);
-            reqData.put("path", page);
-            reqData.put("width", width);
-            reqDataJsonStr = JsonUtil.toJSONString(reqData);
-
-            JSONObject jsonParam = new JSONObject();
-            jsonParam.put("path", page);
-            jsonParam.put("width", width);
-
-            InputStream inputStream = HttpRESTDataClient.doWXPost(url, jsonParam);
-
-            ByteArrayOutputStream output = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            int n;
-            while (-1 != (n = inputStream.read(buffer))) {
-                output.write(buffer, 0, n);
-            }
-            byte[] bytes = output.toByteArray();
-            String resStr = output.toString();
-            logger.info("WechatService createStoreQrCode reqData：{},resStr:{}", reqDataJsonStr, resStr);
-            try {
-                JSONObject res = JSON.parseObject(resStr);
-                String errCode = res.get("errcode").toString();
-                if (errCode.equals("40001")) {
-                    getAccessToken(merchantId, true, false);
-                }
-            } catch (Exception e) {
-                String pathRoot = env.getProperty("images.root");
-                String baseImage = env.getProperty("images.path");
-
-                String filePath = "Qr" + type + id + ".png";
-                String path = pathRoot + baseImage + filePath;
-                QRCodeUtil.saveQrCodeToLocal(bytes, path);
-
-                // 上传阿里云oss
-                String mode = env.getProperty("aliyun.oss.mode");
-                if (mode.equals("1")) { // 检查是否开启上传
-                    String endpoint = env.getProperty("aliyun.oss.endpoint");
-                    String accessKeyId = env.getProperty("aliyun.oss.accessKeyId");
-                    String accessKeySecret = env.getProperty("aliyun.oss.accessKeySecret");
-                    String bucketName = env.getProperty("aliyun.oss.bucketName");
-                    String folder = env.getProperty("aliyun.oss.folder");
-                    OSS ossClient = AliyunOssUtil.getOSSClient(accessKeyId, accessKeySecret, endpoint);
-                    File ossFile = new File(path);
-                    return AliyunOssUtil.upload(ossClient, ossFile, bucketName, folder);
-                } else {
-                    return baseImage + filePath;
-                }
-            }
-        } catch (Exception e) {
-            logger.error("生成店铺二维码出错啦：{}", e.getMessage());
-            throw new BusinessCheckException("生成二维码出错，请检查小程序配置.");
-        }
-
-        throw new BusinessCheckException("生成二维码出错，请稍后再试.");
-    }
-
     /**
      * 开通微信卡券
      *
@@ -899,54 +819,100 @@ public class WeixinServiceImpl implements WeixinService {
         return cardId;
     }
 
-    /**
-     * 创建微信卡券领取的二维码
+    /***
+     * 生成二维码
      *
      * @param merchantId 商户ID
-     * @param cardId 微信卡券ID
-     * @param code 会员卡编码
+     * @param type 类型
+     * @param id 数据ID
+     * @param page 页面
+     * @param width 宽度
      * @return
      * */
     @Override
-    public String createCardQrCode(Integer merchantId, String cardId, String code) {
-        try {
-            String accessToken = getAccessToken(merchantId, false, true);
-            String url = "https://api.weixin.qq.com/card/qrcode/create?access_token="+accessToken;
-
-            Map<String, Object> param = new HashMap<>();
-            Map<String, Object> actionInfo = new HashMap<>();
-            Map<String, Object> card = new HashMap<>();
-            card.put("card_id", cardId);
-            card.put("code", code);
-            card.put("is_unique_code", false);
-            card.put("outer_str", "12b");
-            actionInfo.put("card", card);
-            param.put("action_name", "QR_CARD");
-            param.put("action_info", actionInfo);
-
-            String reqDataJsonStr = JsonUtil.toJSONString(param);
-            String response = HttpRESTDataClient.requestPostBody(url, reqDataJsonStr);
-            logger.info("微信卡券createCardQrCode接口返回：{}", response);
-            JSONObject data = (JSONObject) JSONObject.parse(response);
-            String qrCode = "";
-            if (data.get("errcode").toString().equals("0")) {
-                String content = data.get("url").toString();
-                try {
-                    // 生成并输出二维码
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    com.fuint.common.util.QRCodeUtil.createQrCode(out, content, 800, 800, "png", "");
-                    // 对数据进行Base64编码
-                    qrCode = new String(Base64Util.baseEncode(out.toByteArray()), "UTF-8");
-                    return "data:image/jpg;base64," + qrCode;
-                } catch (Exception e) {
-                    logger.error("生成并输出二维码出错：{}", e.getMessage());
+    public String createQrCode(Integer merchantId, String type, Integer id, String page, Integer width) throws BusinessCheckException {
+        // 最多重试一次（token 过期刷新后重试）
+        for (int retry = 0; retry < 2; retry++) {
+            try {
+                String accessToken = getAccessToken(merchantId, true, retry == 0);
+                if (StringUtil.isEmpty(accessToken)) {
+                    throw new BusinessCheckException("生成二维码出错，请检查小程序配置");
                 }
+
+                String url = "https://api.weixin.qq.com/cgi-bin/wxaapp/createwxaqrcode?access_token=" + accessToken;
+
+                JSONObject jsonParam = new JSONObject();
+                jsonParam.put("path", page);
+                jsonParam.put("width", width);
+
+                Map<String, Object> reqData = new HashMap<>();
+                reqData.put("access_token", accessToken);
+                reqData.put("path", page);
+                reqData.put("width", width);
+                String reqDataJsonStr = JsonUtil.toJSONString(reqData);
+
+                InputStream inputStream = HttpRESTDataClient.doWXPost(url, jsonParam);
+
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                byte[] buffer = new byte[1024];
+                int n;
+                while (-1 != (n = inputStream.read(buffer))) {
+                    output.write(buffer, 0, n);
+                }
+                byte[] bytes = output.toByteArray();
+                String resStr = output.toString();
+                logger.info("WechatService createStoreQrCode reqData：{},resStr:{}", reqDataJsonStr, resStr);
+
+                // 尝试解析为 JSON（说明微信返回了错误）
+                try {
+                    JSONObject res = JSON.parseObject(resStr);
+                    String errCode = res.get("errcode") != null ? res.get("errcode").toString() : "";
+                    String errMsg = res.get("errmsg") != null ? res.get("errmsg").toString() : "";
+                    logger.error("微信生成二维码返回错误: errcode={}, errmsg={}, page={}", errCode, errMsg, page);
+
+                    // token 过期，刷新后重试
+                    if ("40001".equals(errCode) || "42001".equals(errCode)) {
+                        if (retry == 0) {
+                            getAccessToken(merchantId, true, false);
+                            continue;
+                        }
+                    }
+                    throw new BusinessCheckException("生成二维码出错: " + errMsg);
+                } catch (BusinessCheckException e) {
+                    throw e;
+                } catch (Exception e) {
+                    // JSON 解析失败，说明返回的是二进制图片数据，处理图片
+                    String pathRoot = env.getProperty("images.root");
+                    String baseImage = env.getProperty("images.path");
+
+                    String filePath = "Qr" + type + id + ".png";
+                    String path = pathRoot + baseImage + filePath;
+                    QRCodeUtil.saveQrCodeToLocal(bytes, path);
+
+                    // 上传阿里云oss
+                    String mode = env.getProperty("aliyun.oss.mode");
+                    if (mode.equals("1")) { // 检查是否开启上传
+                        String endpoint = env.getProperty("aliyun.oss.endpoint");
+                        String accessKeyId = env.getProperty("aliyun.oss.accessKeyId");
+                        String accessKeySecret = env.getProperty("aliyun.oss.accessKeySecret");
+                        String bucketName = env.getProperty("aliyun.oss.bucketName");
+                        String folder = env.getProperty("aliyun.oss.folder");
+                        OSS ossClient = AliyunOssUtil.getOSSClient(accessKeyId, accessKeySecret, endpoint);
+                        File ossFile = new File(path);
+                        return AliyunOssUtil.upload(ossClient, ossFile, bucketName, folder);
+                    } else {
+                        return baseImage + filePath;
+                    }
+                }
+            } catch (BusinessCheckException e) {
+                throw e;
+            } catch (Exception e) {
+                logger.error("生成店铺二维码出错啦：{}", e.getMessage());
+                throw new BusinessCheckException("生成二维码出错，请检查小程序配置.");
             }
-        } catch (Exception e) {
-            logger.error("创建微信卡券领取二维码出错：{}", e.getMessage());
-            return "";
         }
-        return "";
+
+        throw new BusinessCheckException("生成二维码出错，请稍后再试.");
     }
 
     /**
@@ -991,20 +957,23 @@ public class WeixinServiceImpl implements WeixinService {
      *
      * @param merchantId 商户ID
      * @param path 页面路径
+     * @param query 页面参数
      * @return
      * */
     @Override
-    public String createMiniAppLink(Integer merchantId, String path) {
+    public String createMiniAppLink(Integer merchantId, String path, String query) {
         String link = "";
         try {
-            String accessToken = getAccessToken(merchantId, true,true);
+            String accessToken = getAccessToken(merchantId, true, true);
             if (StringUtil.isEmpty(accessToken)) {
                 return "";
             }
-            String url = "https://api.weixin.qq.com/wxa/genwxashortlink?access_token=" + accessToken +"&";
+            String url = "https://api.weixin.qq.com/wxa/generate_urllink?access_token=" + accessToken;
 
             Map<String, Object> param = new HashMap<>();
-            param.put("page_url", path);
+            param.put("path", path);
+            param.put("query", query);
+            param.put("env_version", "release");
 
             String reqDataJsonStr = JsonUtil.toJSONString(param);
             String response = HttpRESTDataClient.requestPostBody(url, reqDataJsonStr);
@@ -1012,7 +981,7 @@ public class WeixinServiceImpl implements WeixinService {
             JSONObject data = (JSONObject) JSONObject.parse(response);
 
             if (data.get("errcode").toString().equals("0")) {
-                Object linkObject = data.get("link");
+                Object linkObject = data.get("url_link");
                 if (linkObject != null && StringUtil.isNotEmpty(linkObject.toString())) {
                     link = linkObject.toString();
                 }

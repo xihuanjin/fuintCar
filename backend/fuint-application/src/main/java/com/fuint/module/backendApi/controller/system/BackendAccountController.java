@@ -234,7 +234,12 @@ public class BackendAccountController extends BaseController {
         String merchantId = param.get("merchantId") == null ? "" : param.get("merchantId").toString();
         Long id = Long.parseLong(param.get("id").toString());
 
-        AccountInfo loginAccount = TokenUtil.getAccountInfo();;
+        AccountInfo loginAccount = TokenUtil.getAccountInfo();
+        // 不能修改自己的账户信息
+        if (loginAccount.getId().equals(id.intValue())) {
+            return getFailureResult(201, "不能修改自己的账户信息");
+        }
+
         TAccount tAccount = tAccountService.getAccountInfoById(id.intValue());
         if (loginAccount.getMerchantId() > 0 && !tAccount.getMerchantId().equals(loginAccount.getMerchantId())) {
             return getFailureResult(1004);

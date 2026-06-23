@@ -157,16 +157,6 @@ public interface WeixinService {
     String createWxCard(Integer merchantId, String wxCardId) throws BusinessCheckException;
 
     /**
-     * 创建微信卡券领取的二维码
-     *
-     * @param merchantId 商户ID
-     * @param cardId 微信卡券ID
-     * @param code 会员卡编码
-     * @return
-     * */
-    String createCardQrCode(Integer merchantId, String cardId, String code);
-
-    /**
      * 是否已领取卡券
      *
      * @param merchantId 商户ID
@@ -181,9 +171,10 @@ public interface WeixinService {
      *
      * @param merchantId 商户ID
      * @param path 页面路径
+     * @param query 页面参数
      * @return
      * */
-    String createMiniAppLink(Integer merchantId, String path);
+    String createMiniAppLink(Integer merchantId, String path, String query);
 
     /**
      * 上传小程序发货信息

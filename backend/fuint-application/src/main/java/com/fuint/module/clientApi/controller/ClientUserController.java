@@ -416,17 +416,9 @@ public class ClientUserController extends BaseController {
             logger.error(e.getMessage(), e);
         }
 
-        // 微信会员卡领取二维码
-        String wxCardQrCode = "";
-        MtSetting cardIdSetting = settingService.querySettingByName(mtUser.getMerchantId(), SettingTypeEnum.USER.getKey(), UserSettingEnum.WX_MEMBER_CARD_ID.getKey());
-        if (cardIdSetting != null) {
-            wxCardQrCode = weixinService.createCardQrCode(mtUser.getMerchantId(), cardIdSetting.getValue(), mtUser.getUserNo());
-        }
-
         Map<String, Object> outParams = new HashMap<>();
         outParams.put("qrCode", qrCode);
         outParams.put("userInfo", mtUser);
-        outParams.put("wxCardQrCode", wxCardQrCode);
 
         return getSuccessResult(outParams);
     }
