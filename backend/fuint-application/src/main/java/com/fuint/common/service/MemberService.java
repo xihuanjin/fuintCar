@@ -107,10 +107,9 @@ public interface MemberService extends IService<MtUser> {
      *
      * @param  merchantId 商户ID
      * @param  openId 微信openId
-     * @throws BusinessCheckException
      * @return
      */
-    MtUser queryMemberByOpenId(Integer merchantId, String openId, JSONObject userInfo) throws BusinessCheckException;
+    MtUser queryMemberByOpenId(Integer merchantId, String openId, JSONObject userInfo);
 
     /**
      * 根据会员组ID获取会员组信息

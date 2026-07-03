@@ -4,21 +4,19 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fuint.common.dto.content.NavigationDto;
 import com.fuint.common.dto.common.ParamDto;
+import com.fuint.common.dto.content.NavigationDto;
 import com.fuint.common.enums.*;
-import com.fuint.common.service.SettingService;
 import com.fuint.framework.annoation.OperationServiceLog;
-import com.fuint.framework.exception.BusinessCheckException;
 import com.fuint.repository.mapper.MtSettingMapper;
 import com.fuint.repository.model.MtSetting;
+import com.fuint.common.service.SettingService;
 import com.fuint.utils.StringUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -50,10 +48,9 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
     /**
      * 删除配置
      *
-     * @param merchantId 商户ID
-     * @param type 类型
-     * @param name 配置名称
-     * @throws BusinessCheckException
+     * @param  merchantId 商户ID
+     * @param  type 类型
+     * @param  name 配置名称
      * @return
      */
     @Override
@@ -69,7 +66,6 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
      * 保存配置
      *
      * @param  mtSetting 配置参数
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -114,7 +110,6 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
      *
      * @param  merchantId 商户ID
      * @param  type 配置类型
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -128,7 +123,6 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
      * @param  merchantId 商户ID
      * @param  type 类型
      * @param  name 配置名称
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -143,7 +137,6 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
      * @param  storeId 店铺ID
      * @param  type 类型
      * @param  name 配置名称
-     * @throws BusinessCheckException
      * @return
      */
     @Override
@@ -172,6 +165,14 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
             }
         }
 
+        // 确保返回的路径不为 null，并去掉末尾的斜杠
+        if (StringUtil.isEmpty(basePath)) {
+            basePath = "";
+        }
+        if (basePath.endsWith("/")) {
+            basePath = basePath.substring(0, basePath.length() - 1);
+        }
+
         return basePath;
     }
 
@@ -184,7 +185,7 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
      * @return
      * */
     @Override
-    public List<ParamDto> getPayTypeList(Integer merchantId, Integer storeId, String platform) throws BusinessCheckException {
+    public List<ParamDto> getPayTypeList(Integer merchantId, Integer storeId, String platform) {
         List<ParamDto> payTypeList = new ArrayList<>();
 
         // 微信jsapi
@@ -196,7 +197,7 @@ public class SettingServiceImpl extends ServiceImpl<MtSettingMapper, MtSetting> 
         payTypeList.add(balance);
 
         // 前台支付
-        MtSetting mtSetting = settingService.querySettingByName(merchantId, storeId,  SettingTypeEnum.ORDER.getKey(), OrderSettingEnum.PAY_OFF_LINE.getKey());
+        MtSetting mtSetting = settingService.querySettingByName(merchantId, storeId, SettingTypeEnum.ORDER.getKey(), OrderSettingEnum.PAY_OFF_LINE.getKey());
         if (mtSetting != null && mtSetting.getValue().equals(YesOrNoEnum.YES.getKey())) {
             ParamDto store = new ParamDto(PayTypeEnum.STORE.getKey(), PayTypeEnum.STORE.getValue(), PayTypeEnum.STORE.getKey());
             payTypeList.add(store);

@@ -53,7 +53,7 @@ public interface InvoiceService extends IService<MtInvoice> {
      * @param accountInfo 操作人
      * @return
      */
-    void deleteInvoice(Integer id, AccountInfo accountInfo) throws BusinessCheckException ;
+    void deleteInvoice(Integer id, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 更新发票信息

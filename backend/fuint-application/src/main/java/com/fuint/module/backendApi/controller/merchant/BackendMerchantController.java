@@ -81,7 +81,7 @@ public class BackendMerchantController extends BaseController {
     @ApiOperation(value = "查询商户列表")
     @RequestMapping(value = "/searchMerchant",  method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject searchMerchant(HttpServletRequest request) throws BusinessCheckException {
+    public ResponseObject searchMerchant(HttpServletRequest request) {
         String merchantId = request.getParameter("id") == null ? "" : request.getParameter("id");
         String name = request.getParameter("name") == null ? "" : request.getParameter("name");
 
@@ -151,8 +151,7 @@ public class BackendMerchantController extends BaseController {
             return getFailureResult(201, "抱歉，您没有添加商户的权限");
         }
 
-        mtMerchant.setOperator(accountInfo.getAccountName());
-        merchantService.saveMerchant(mtMerchant);
+        merchantService.saveMerchant(mtMerchant, accountInfo);
 
         return getSuccessResult(true);
     }
@@ -164,7 +163,7 @@ public class BackendMerchantController extends BaseController {
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('merchant:index')")
-    public ResponseObject getMerchantInfo(@PathVariable("id") Integer merchantId) throws BusinessCheckException {
+    public ResponseObject getMerchantInfo(@PathVariable("id") Integer merchantId) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         if (accountInfo.getMerchantId() != null && accountInfo.getMerchantId() > 0) {
             merchantId = accountInfo.getMerchantId();

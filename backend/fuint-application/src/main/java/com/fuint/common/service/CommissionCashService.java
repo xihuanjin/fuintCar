@@ -42,7 +42,6 @@ public interface CommissionCashService extends IService<MtCommissionCash> {
      * 根据ID获取记录信息
      *
      * @param  id 记录ID
-     * @throws BusinessCheckException
      * @return
      */
     CommissionCashDto queryCommissionCashById(Integer id);

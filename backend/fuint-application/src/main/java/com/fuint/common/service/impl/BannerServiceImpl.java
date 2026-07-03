@@ -148,26 +148,6 @@ public class BannerServiceImpl extends ServiceImpl<MtBannerMapper, MtBanner> imp
     }
 
     /**
-     * 根据ID删除Banner图
-     *
-     * @param id BannerID
-     * @param operator 操作人
-     * @return
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    @OperationServiceLog(description = "删除Banner图")
-    public void deleteBanner(Integer id, String operator) {
-        MtBanner mtBanner = queryBannerById(id);
-        if (null == mtBanner) {
-            return;
-        }
-        mtBanner.setStatus(StatusEnum.DISABLE.getKey());
-        mtBanner.setUpdateTime(new Date());
-        mtBannerMapper.updateById(mtBanner);
-    }
-
-    /**
      * 修改Banner图
      *
      * @param bannerDto

@@ -828,6 +828,9 @@ public class OrderServiceImpl extends ServiceImpl<MtOrderMapper, MtOrder> implem
             throw new BusinessCheckException("系统已关闭交易功能，请稍后再试！");
         }
 
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
+
         // 收银台通过手机号自动注册会员信息
         if ((userInfo == null || StringUtil.isEmpty(token))) {
             String mobile = param.getMobile() == null ? "" : param.getMobile();

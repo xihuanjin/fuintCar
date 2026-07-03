@@ -208,7 +208,8 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
                 MtGoods::getStock,
                 MtGoods::getType,
                 MtGoods::getOperator,
-                MtGoods::getWeight);
+                MtGoods::getWeight,
+                MtGoods::getGradeIds);
         Page<MtGoods> pageHelper = PageHelper.startPage(param.getPage(), param.getPageSize());
         List<MtGoods> goodsList = mtGoodsMapper.selectList(lambdaQueryWrapper);
         List<GoodsDto> dataList = new ArrayList<>();
@@ -242,6 +243,7 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
             item.setCreateTime(mtGoods.getCreateTime());
             item.setUpdateTime(mtGoods.getUpdateTime());
             item.setStatus(mtGoods.getStatus());
+            item.setGradeIds(mtGoods.getGradeIds());
             item.setOperator(mtGoods.getOperator());
             dataList.add(item);
         }
@@ -634,27 +636,6 @@ public class GoodsServiceImpl extends ServiceImpl<MtGoodsMapper, MtGoods> implem
         goodsInfo.setStoreIds(storeIds);
 
         return goodsInfo;
-    }
-
-    /**
-     * 根据ID删除商品信息
-     *
-     * @param  id ID
-     * @param  operator 操作人
-     * @throws BusinessCheckException
-     * @return
-     */
-    @Override
-    @OperationServiceLog(description = "删除商品信息")
-    @Transactional(rollbackFor = Exception.class)
-    public void deleteGoods(Integer id, String operator) throws BusinessCheckException {
-        MtGoods cateInfo = queryGoodsById(id);
-        if (null == cateInfo) {
-            throw new BusinessCheckException("该商品不存在");
-        }
-        cateInfo.setStatus(StatusEnum.DISABLE.getKey());
-        cateInfo.setUpdateTime(new Date());
-        mtGoodsMapper.updateById(cateInfo);
     }
 
     /**

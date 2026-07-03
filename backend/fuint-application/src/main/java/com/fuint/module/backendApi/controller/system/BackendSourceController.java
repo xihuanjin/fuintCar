@@ -209,7 +209,7 @@ public class BackendSourceController extends BaseController {
      */
     @ApiOperation(value = "获取菜单下拉树列表")
     @RequestMapping(value = "/treeselect", method = RequestMethod.GET)
-    public ResponseObject treeselect(HttpServletRequest request) {
+    public ResponseObject treeselect() {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         List<TreeNode> sources = sourceService.getSourceTree(accountInfo.getMerchantId(), "");

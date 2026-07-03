@@ -161,7 +161,7 @@ public class BackendCommissionCashController extends BaseController {
         return getSuccessResult(true);
     }
 
-    private boolean checkOwner(Integer commissionCashId, AccountInfo accountInfo) throws BusinessCheckException {
+    private boolean checkOwner(Integer commissionCashId, AccountInfo accountInfo) {
         CommissionCashDto commissionCash = commissionCashService.queryCommissionCashById(commissionCashId);
         if (commissionCash == null) {
             return false;

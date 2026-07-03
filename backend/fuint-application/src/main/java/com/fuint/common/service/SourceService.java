@@ -47,10 +47,9 @@ public interface SourceService extends IService<TSource> {
      *
      * @param  merchantId 商户ID
      * @param  accountId 账号ID
-     * @throws BusinessCheckException
      * @return
      */
-    List<TSource> getMenuListByUserId(Integer merchantId, Integer accountId) throws BusinessCheckException;
+    List<TSource> getMenuListByUserId(Integer merchantId, Integer accountId);
 
     /**
      * 构建前端路由所需要的菜单

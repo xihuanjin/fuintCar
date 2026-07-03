@@ -93,6 +93,8 @@ public class ClientSignController extends BaseController {
         JSONObject paramsObj = new JSONObject(param);
         logger.info("微信授权登录参数：{}", param);
         Integer merchantId = merchantService.getMerchantId(merchantNo);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
         JSONObject userInfo = paramsObj.getJSONObject("userInfo");
         JSONObject loginInfo = weixinService.getWxProfile(merchantId, param.get("code").toString());
         if (loginInfo == null) {
@@ -153,12 +155,12 @@ public class ClientSignController extends BaseController {
         JSONObject userInfo = weixinService.getWxOpenId(merchantId, param.get("code").toString());
 
         logger.info("公众号授权登录, userInfo:{}，param:{}", userInfo, param);
-
         if (userInfo == null) {
             return getFailureResult(201, "微信公众号授权失败");
         }
 
-        logger.error("公众号授权登录, userInfo:{}，param:{}", userInfo, param);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
 
         userInfo.put("storeId", storeId);
         userInfo.put("shareId", shareId);
@@ -215,6 +217,8 @@ public class ClientSignController extends BaseController {
             return getFailureResult(201,"图形验证码有误");
         }
         Integer merchantId = merchantService.getMerchantId(merchantNo);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
         MtUser userData = memberService.queryMemberByName(merchantId, account);
         if (userData != null) {
             return getFailureResult(201,"该用户名已存在");
@@ -284,6 +288,8 @@ public class ClientSignController extends BaseController {
         TokenDto dto = new TokenDto();
         MtUser mtUser = null;
         Integer merchantId = merchantService.getMerchantId(merchantNo);
+        // 校验商户是否已过期
+        merchantService.checkMerchantValid(merchantId);
         // 方式1：通过短信验证码登录
         if (StringUtil.isNotEmpty(mobile) && StringUtil.isNotEmpty(verifyCode)) {
             // 如果已经登录，免输入验证码
@@ -383,7 +389,7 @@ public class ClientSignController extends BaseController {
     @ApiOperation(value = "获取会员信息")
     @RequestMapping(value = "/doGetUserInfo", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject doGetUserInfo(HttpServletRequest request) {
+    public ResponseObject doGetUserInfo() {
         UserInfo userInfo = TokenUtil.getUserInfo();
         if (userInfo == null) {
             return getFailureResult(1001, "用户没登录!");

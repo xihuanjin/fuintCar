@@ -28,7 +28,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -94,7 +93,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/init/{userId}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject init(HttpServletRequest request, @PathVariable("userId") Integer userId) throws BusinessCheckException {
+    public ResponseObject init(HttpServletRequest request, @PathVariable("userId") Integer userId) {
         Integer page = request.getParameter("page") == null ? Constants.PAGE_NUMBER : Integer.parseInt(request.getParameter("page"));
         Integer pageSize = request.getParameter("pageSize") == null ? Constants.PAGE_SIZE : Integer.parseInt(request.getParameter("pageSize"));
         Integer cateId = request.getParameter("cateId") == null ? 0 : Integer.parseInt(request.getParameter("cateId"));
@@ -145,7 +144,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/searchGoods", method = RequestMethod.POST)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject searchGoods(@RequestBody Map<String, Object> param) throws BusinessCheckException {
+    public ResponseObject searchGoods(@RequestBody Map<String, Object> param) {
         String keyword =  param.get("keyword") == null ? "" : param.get("keyword").toString();
 
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
@@ -172,7 +171,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/getGoodsInfo/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject getGoodsInfo(@PathVariable("id") Integer goodsId) throws InvocationTargetException, IllegalAccessException {
+    public ResponseObject getGoodsInfo(@PathVariable("id") Integer goodsId) {
         GoodsDto goodsInfo = goodsService.getGoodsDetail(goodsId, false);
 
         Map<String, Object> result = new HashMap<>();
@@ -281,7 +280,7 @@ public class BackendCashierController extends BaseController {
     @RequestMapping(value = "/getMemberInfoById/{userId}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('cashier:index')")
-    public ResponseObject getMemberInfoById(@PathVariable("userId") String userId) throws BusinessCheckException {
+    public ResponseObject getMemberInfoById(@PathVariable("userId") String userId) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         if (StringUtil.isEmpty(userId)) {

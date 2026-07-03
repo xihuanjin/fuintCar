@@ -143,7 +143,6 @@ public interface OrderService extends IService<MtOrder> {
      * 根据条件搜索订单
      *
      * @param params 查询参数
-     * @throws BusinessCheckException
      * @return
      * */
     List<MtOrder> getOrderListByParams(Map<String, Object> params);
@@ -190,7 +189,6 @@ public interface OrderService extends IService<MtOrder> {
      * @param storeId 店铺ID
      * @param beginTime 开始时间
      * @param endTime 结束时间
-     * @throws BusinessCheckException
      * @return
      * */
     BigDecimal getPayMoney(Integer merchantId, Integer storeId, Date beginTime, Date endTime);
@@ -200,7 +198,6 @@ public interface OrderService extends IService<MtOrder> {
      *
      * @param merchantId 商户ID
      * @param storeId 店铺ID
-     * @throws BusinessCheckException
      * @return
      * */
     Integer getPayUserCount(Integer merchantId, Integer storeId);
@@ -210,7 +207,6 @@ public interface OrderService extends IService<MtOrder> {
      *
      * @param merchantId 商户ID
      * @param storeId 店铺ID
-     * @throws BusinessCheckException
      * @return
      * */
     BigDecimal getPayMoney(Integer merchantId, Integer storeId);
@@ -219,7 +215,6 @@ public interface OrderService extends IService<MtOrder> {
      * 获取会员支付金额
      *
      * @param userId 会员ID
-     * @throws BusinessCheckException
      * @return
      * */
     BigDecimal getUserPayMoney(Integer userId);
@@ -228,7 +223,6 @@ public interface OrderService extends IService<MtOrder> {
      * 获取会员订单数
      *
      * @param userId 会员ID
-     * @throws BusinessCheckException
      * @return
      * */
     Integer getUserPayOrderCount(Integer userId);
@@ -237,7 +231,6 @@ public interface OrderService extends IService<MtOrder> {
      * 获取等待分佣的订单列表
      *
      * @param dateTime 时间
-     * @throws BusinessCheckException
      * @return
      * */
     List<MtOrder> getTobeCommissionOrderList(String dateTime);

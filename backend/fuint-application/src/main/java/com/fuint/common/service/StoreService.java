@@ -38,10 +38,10 @@ public interface StoreService extends IService<MtStore> {
     /**
      * 获取系统默认店铺
      *
-     * @throws BusinessCheckException
+     * @param merchantNo 商户号
      * @return
      */
-    MtStore getDefaultStore(String merchantNo) throws BusinessCheckException;
+    MtStore getDefaultStore(String merchantNo);
 
     /**
      * 根据店铺ID获取店铺信息

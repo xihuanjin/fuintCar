@@ -35,13 +35,13 @@ public interface GoodsService {
     /**
      * 保存商品
      *
-     * @param  reqDto 商品参数
+     * @param  mtGoods 商品参数
      * @param  storeIds 分配店铺
      * @param  accountInfo 登录用户信息
      * @throws BusinessCheckException
      * @return
      */
-    MtGoods saveGoods(MtGoods reqDto, String storeIds, AccountInfo accountInfo) throws BusinessCheckException;
+    MtGoods saveGoods(MtGoods mtGoods, String storeIds, AccountInfo accountInfo) throws BusinessCheckException;
 
     /**
      * 更新商品状态
@@ -88,16 +88,6 @@ public interface GoodsService {
      * @return
      */
     GoodsDto getGoodsDetail(Integer id, boolean getDeleteSpec);
-
-    /**
-     * 根据ID删除
-     *
-     * @param  id       ID
-     * @param  operator 操作人
-     * @throws BusinessCheckException
-     * @return
-     */
-    void deleteGoods(Integer id, String operator) throws BusinessCheckException;
 
     /**
      * 获取店铺的商品列表

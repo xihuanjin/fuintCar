@@ -1,9 +1,8 @@
 package com.fuint.module.backendApi.controller.merchant;
 
-import com.fuint.common.Constants;
-import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.dto.common.ParamDto;
 import com.fuint.common.dto.merchant.StaffDto;
+import com.fuint.common.dto.system.AccountInfo;
 import com.fuint.common.enums.StaffCategoryEnum;
 import com.fuint.common.enums.StatusEnum;
 import com.fuint.common.param.StaffPage;
@@ -12,7 +11,6 @@ import com.fuint.common.util.CommonUtil;
 import com.fuint.common.util.PhoneFormatCheckUtils;
 import com.fuint.common.util.TokenUtil;
 import com.fuint.framework.exception.BusinessCheckException;
-import com.fuint.framework.pagination.PaginationRequest;
 import com.fuint.framework.pagination.PaginationResponse;
 import com.fuint.framework.web.BaseController;
 import com.fuint.framework.web.ResponseObject;
@@ -24,7 +22,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,7 +148,7 @@ public class BackendStaffController extends BaseController {
     @RequestMapping(value = "/info/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('staff:list')")
-    public ResponseObject getStaffInfo(@PathVariable("id") Integer id) throws BusinessCheckException {
+    public ResponseObject getStaffInfo(@PathVariable("id") Integer id) {
         MtStaff staffInfo = staffService.queryStaffById(id);
         if (staffInfo != null) {
             staffInfo.setMobile(CommonUtil.hidePhone(staffInfo.getMobile()));
@@ -168,7 +165,7 @@ public class BackendStaffController extends BaseController {
     @ApiOperation(value = "店铺员工列表")
     @RequestMapping(value = "/storeStaffList/{storeId}", method = RequestMethod.GET)
     @CrossOrigin
-    public ResponseObject storeStaffList(@PathVariable("storeId") Integer storeId) throws BusinessCheckException {
+    public ResponseObject storeStaffList(@PathVariable("storeId") Integer storeId) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Map<String, Object> params = new HashMap<>();
@@ -197,7 +194,7 @@ public class BackendStaffController extends BaseController {
     @RequestMapping(value = "/delete/{id}", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('staff:list')")
-    public ResponseObject deleteStaff(@PathVariable("id") Integer id) throws BusinessCheckException {
+    public ResponseObject deleteStaff(@PathVariable("id") Integer id) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
         staffService.updateAuditedStatus(id, StatusEnum.DISABLE.getKey(), accountInfo.getAccountName());
         return getSuccessResult(true);

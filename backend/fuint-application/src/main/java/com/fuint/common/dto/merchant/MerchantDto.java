@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
  * 商户实体
@@ -61,6 +62,14 @@ public class MerchantDto implements Serializable {
 
     @ApiModelProperty("状态，A：有效/启用；D：无效")
     private String status;
+
+    @ApiModelProperty("有效期开始时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date startTime;
+
+    @ApiModelProperty("有效期结束时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date endTime;
 
     @ApiModelProperty("最后操作人")
     private String operator;

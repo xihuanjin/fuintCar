@@ -157,7 +157,7 @@
   }
 
   .tab-active {
-    color: ##373F64;
+    color: #373F64;
     font-weight: bold;
     &::after {
       content: '';
@@ -167,7 +167,7 @@
       transform: translateX(-50%);
       width: 60rpx;
       height: 6rpx;
-      background: ##373F64;
+      background: #373F64;
       border-radius: 3rpx;
     }
   }

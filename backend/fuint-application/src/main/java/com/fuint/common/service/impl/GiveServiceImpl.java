@@ -299,7 +299,6 @@ public class GiveServiceImpl extends ServiceImpl<MtGiveMapper, MtGive> implement
      * 根据ID获取转赠信息
      *
      * @param id ID
-     * @throws BusinessCheckException
      * @return
      */
     @Override

@@ -290,7 +290,7 @@ public class BackendOrderController extends BaseController {
     @ApiOperation(value = "最新订单列表查询")
     @RequestMapping(value = "/latest", method = RequestMethod.POST)
     @CrossOrigin
-    public ResponseObject latest(@RequestBody OrderListParam orderListParam) throws BusinessCheckException {
+    public ResponseObject latest(@RequestBody OrderListParam orderListParam) {
         AccountInfo accountInfo = TokenUtil.getAccountInfo();
 
         Map<String, Object> result = new HashMap<>();
@@ -412,7 +412,7 @@ public class BackendOrderController extends BaseController {
     @RequestMapping(value = "/export", method = RequestMethod.GET)
     @CrossOrigin
     @PreAuthorize("@pms.hasPermission('order:index')")
-    public void export(HttpServletRequest request, HttpServletResponse response, OrderListParam params) throws Exception {
+    public void export(HttpServletRequest request, HttpServletResponse response, OrderListParam params) {
         AccountInfo accountInfo = TokenUtil.getAccountInfoByToken(request.getParameter("token"));
         params.setPage(Constants.PAGE_NUMBER);
         params.setPageSize(Constants.MAX_ROWS);

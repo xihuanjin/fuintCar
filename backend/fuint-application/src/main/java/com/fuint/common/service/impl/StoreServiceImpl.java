@@ -257,7 +257,7 @@ public class StoreServiceImpl extends ServiceImpl<MtStoreMapper, MtStore> implem
     /**
      * 获取系统默认店铺
      *
-     * @param  merchantNo 商户号
+     * @param merchantNo 商户号
      * @return
      */
     @Override

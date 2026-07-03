@@ -36,17 +36,17 @@ public interface ArticleService extends IService<MtArticle> {
      * 根据ID获取文章信息
      *
      * @param  id 文章ID
-     * @throws BusinessCheckException
+     * @return
      */
-    MtArticle queryArticleById(Integer id) throws BusinessCheckException;
+    MtArticle queryArticleById(Integer id);
 
     /**
      * 根据ID获取文章详情
      *
      * @param  id 文章ID
-     * @throws BusinessCheckException
+     * @return
      */
-    ArticleDto getArticleDetail(Integer id) throws BusinessCheckException;
+    ArticleDto getArticleDetail(Integer id);
 
     /**
      * 更新文章

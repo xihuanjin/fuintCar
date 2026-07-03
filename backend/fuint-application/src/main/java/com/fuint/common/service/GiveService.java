@@ -24,10 +24,10 @@ public interface GiveService extends IService<MtGive> {
     /**
      * 分页查询列表
      *
-     * @param paginationRequest
+     * @param giveLogPage
      * @return
      */
-    PaginationResponse<GiveDto> queryGiveListByPagination(GiveLogPage giveLogPage) throws BusinessCheckException;
+    PaginationResponse<GiveDto> queryGiveListByPagination(GiveLogPage giveLogPage);
 
     /**
      * 转赠卡券
@@ -42,10 +42,9 @@ public interface GiveService extends IService<MtGive> {
      * 根据组ID获取信息
      *
      * @param id ID
-     * @throws BusinessCheckException
      * @return
      */
-    MtGive queryGiveById(Long id) throws BusinessCheckException;
+    MtGive queryGiveById(Long id);
 
     /**
      * 根据条件搜索转赠详情
