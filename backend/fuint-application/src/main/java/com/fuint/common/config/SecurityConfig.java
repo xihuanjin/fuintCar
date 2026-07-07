@@ -30,13 +30,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF禁用，因为不使用session
+                // CSRF禁用，因为使用token模式
                 .csrf().disable()
                 // 基于token，所以不需要session
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 // 过滤请求
                 .authorizeHttpRequests(authz -> authz
-                        // 允许匿名访问
+                        // 业务API由自定义拦截器鉴权
                         .antMatchers("/clientApi/**", "/backendApi/**", "/merchantApi/**").permitAll()
                         .antMatchers(HttpMethod.GET,
                                 "/",
@@ -56,7 +56,12 @@ public class SecurityConfig {
                         // 除上面外的所有请求全部需要鉴权认证
                         .anyRequest().authenticated()
                 )
-                .headers().frameOptions().disable();
+                // 安全响应头
+                .headers(headers -> headers
+                        .frameOptions().deny()
+                        .xssProtection().and()
+                        .contentSecurityPolicy("script-src 'self'")
+                );
 
         return http.build();
     }

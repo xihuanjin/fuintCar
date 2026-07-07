@@ -124,12 +124,10 @@ public class QRCodeUtil {
             is = url.openStream();
             bufferedImage = ImageIO.read(is);
         } catch (MalformedURLException e) {
-            e.printStackTrace();
-            System.out.println("imageURL: " + imageURL + ",无效!");
+            logger.error("imageURL: {}，无效!", imageURL, e);
             return null;
         } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("imageURL: " + imageURL + ",读取失败!");
+            logger.error("imageURL: {}，读取失败!", imageURL, e);
             return null;
         } finally {
             try {
@@ -137,8 +135,7 @@ public class QRCodeUtil {
                     is.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
-                System.out.println("imageURL: " + imageURL + ",流关闭异常!");
+                logger.error("imageURL: {}，流关闭异常!", imageURL, e);
                 return null;
             }
         }

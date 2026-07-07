@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Data
 @TableName("mt_vehicle")
-@ApiModel(value = "MtVehicle对象", description = "")
+@ApiModel(value = "MtVehicle对象", description = "会员车辆")
 public class MtVehicle implements Serializable {
     private static final long serialVersionUID = 1L;
 

@@ -2,11 +2,14 @@ package com.fuint;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.tuckey.web.filters.urlrewrite.UrlRewriteFilter;
 
@@ -18,18 +21,21 @@ import org.tuckey.web.filters.urlrewrite.UrlRewriteFilter;
  */
 @EnableScheduling
 @SpringBootApplication
+@PropertySource("file:${env.properties.path}/${env.profile}/application.properties")
 public class fuintApplication {
+
+    private static final Logger logger = LoggerFactory.getLogger(fuintApplication.class);
 
     public static final String REWRITE_FILTER_NAME = "rewriteFilter";
     public static final String REWRITE_FILTER_CONF_PATH = "urlRewrite.xml";
 
     public static void main(String[] args) {
         SpringApplication.run(fuintApplication.class, args);
-        System.out.println("==================================================\n" +
+        logger.info("==================================================\n" +
                 "恭喜，fuint系统启动成功啦！  \n" +
                 "系统官网：https://www.fuint.cn  \n" +
                 "接口文档：http://localhost:8080/swagger-ui.html \n" +
-                "==================================================\n  \n");
+                "==================================================");
     }
 
     @Bean

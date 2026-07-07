@@ -210,7 +210,7 @@ public class SendSmsServiceImpl implements SendSmsService {
                     ObjectMapper mapper = new ObjectMapper();
                     paramJson = mapper.writeValueAsString(contentParams);
                 } catch(Exception e){
-                    e.printStackTrace();
+                    logger.error("短信参数序列化异常: {}", e.getMessage(), e);
                 }
             }
 
@@ -230,13 +230,17 @@ public class SendSmsServiceImpl implements SendSmsService {
                 CommonResponse response = client.getCommonResponse(request);
                 logger.info("sendMessage response:{}", response.toString());
                 res = response.getData();
-                System.out.println(response.getData());
+                logger.debug("sendMessage response data: {}", response.getData());
             } catch (ServerException e) {
-                e.printStackTrace();
+                logger.error("阿里云短信发送异常: {}", e.getMessage(), e);
             } catch (ClientException e) {
-                e.printStackTrace();
+                logger.error("阿里云短信客户端异常: {}", e.getMessage(), e);
             }
             logger.info("sendMessage outParams:{}", res);
+            logger.info("smsContent:{}", smsContent);
+            logger.info("SignName:{}", signName);
+            logger.info("TemplateCode:{}", templateInfo.getCode());
+            logger.info("TemplateParam:{}", paramJson);
             saveSendLog(merchantId, phoneNo, smsContent);
             flag = true;
         } catch (Exception e) {

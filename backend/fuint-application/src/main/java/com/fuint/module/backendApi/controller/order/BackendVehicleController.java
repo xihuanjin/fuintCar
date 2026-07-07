@@ -1,8 +1,10 @@
 package com.fuint.module.backendApi.controller.order;
 
 import com.fuint.common.dto.system.AccountInfo;
+import com.fuint.common.dto.common.ParamDto;
 import com.fuint.common.dto.order.VehicleDto;
 import com.fuint.common.enums.StatusEnum;
+import com.fuint.common.enums.VehicleTypeEnum;
 import com.fuint.common.param.UserVehicleParam;
 import com.fuint.common.service.MemberService;
 import com.fuint.common.service.VehicleService;
@@ -20,6 +22,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Api(tags="后台管理-车辆相关接口")
@@ -43,7 +47,15 @@ public class BackendVehicleController extends BaseController {
     @CrossOrigin
     public ResponseObject list(HttpServletRequest request) throws BusinessCheckException {
         PaginationResponse<VehicleDto> paginationResponse = vehicleService.getUserVehicleListByPagination(request);
-        return getSuccessResult(paginationResponse);
+
+        // 车辆类型列表
+        List<ParamDto> vehicleTypeList = VehicleTypeEnum.getVehicleTypeList();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("vehicleTypeList", vehicleTypeList);
+        result.put("paginationResponse", paginationResponse);
+
+        return getSuccessResult(result);
     }
 
     @ApiOperation(value="查询车辆信息", notes="查询会员车辆信息")
